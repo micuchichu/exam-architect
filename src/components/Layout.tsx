@@ -1,17 +1,31 @@
 import { Link, useLocation } from 'react-router-dom';
-import { BookOpen, PlusCircle, FileText, FolderUp } from 'lucide-react';
+import { BookOpen, PlusCircle, FileText, FolderUp, LogIn, LogOut } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import { useAuth } from '@/hooks/useAuth';
+import { Button } from '@/components/ui/button';
+import { toast } from 'sonner';
 
-const navItems = [
+const publicNavItems = [
   { to: '/', label: 'Question Bank', icon: BookOpen },
+  { to: '/exams', label: 'Exams', icon: FileText },
+];
+
+const adminNavItems = [
   { to: '/add', label: 'Add Question', icon: PlusCircle },
   { to: '/upload', label: 'Upload Folder', icon: FolderUp },
-  { to: '/exams', label: 'Exams', icon: FileText },
 ];
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const { pathname } = useLocation();
+  const { isAdmin, user, signOut } = useAuth();
+
+  const navItems = isAdmin ? [...publicNavItems, ...adminNavItems] : publicNavItems;
+
+  const handleSignOut = async () => {
+    await signOut();
+    toast.success('Signed out');
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -40,6 +54,17 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               </Link>
             ))}
             <ThemeToggle />
+            {user ? (
+              <Button variant="ghost" size="sm" className="gap-2 text-muted-foreground" onClick={handleSignOut}>
+                <LogOut className="h-4 w-4" /> Sign Out
+              </Button>
+            ) : (
+              <Link to="/login">
+                <Button variant="ghost" size="sm" className="gap-2 text-muted-foreground">
+                  <LogIn className="h-4 w-4" /> Admin
+                </Button>
+              </Link>
+            )}
           </nav>
         </div>
       </header>
