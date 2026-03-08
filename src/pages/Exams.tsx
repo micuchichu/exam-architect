@@ -4,13 +4,14 @@ import { generateExam } from '@/lib/generator';
 import { getImages } from '@/lib/idb';
 import { cropImageToContent } from '@/lib/cropImage';
 import examHeaderSrc from '@/assets/exam-header.png';
-import { GeneratedExam, QUESTION_TYPE_LABELS, DIFFICULTY_LABELS } from '@/lib/types';
+import { GeneratedExam, ExamSettings, QUESTION_TYPE_LABELS, DIFFICULTY_LABELS } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Sparkles, Trash2, ChevronDown, ChevronUp, Download } from 'lucide-react';
 import { toast } from 'sonner';
 import Layout from '@/components/Layout';
+import ExamSettingsPanel from '@/components/ExamSettingsPanel';
 
 function DifficultyDot({ difficulty }: { difficulty: string }) {
   const colors: Record<string, string> = {
@@ -171,14 +172,21 @@ function ExamImageViewer({ exam }: { exam: GeneratedExam }) {
 export default function Exams() {
   const [exams, setExams] = useState<GeneratedExam[]>([]);
   const [expanded, setExpanded] = useState<string | null>(null);
+  const [questions, setQuestions] = useState<ReturnType<typeof getQuestions>>([]);
+  const [settings, setSettings] = useState<ExamSettings>({
+    excludedTypes: [],
+    excludedSubtypes: [],
+    difficultyBias: 3,
+    typeWeights: {},
+  });
 
   useEffect(() => {
     setExams(getExams());
+    setQuestions(getQuestions());
   }, []);
 
   const handleGenerate = () => {
-    const questions = getQuestions();
-    const result = generateExam(questions);
+    const result = generateExam(questions, settings);
     if ('error' in result) {
       toast.error(result.error);
       return;
@@ -207,6 +215,8 @@ export default function Exams() {
           <Sparkles className="h-4 w-4" /> Generate Exam
         </Button>
       </div>
+
+      <ExamSettingsPanel questions={questions} settings={settings} onChange={setSettings} />
 
       {exams.length === 0 ? (
         <Card className="flex flex-col items-center justify-center py-16 text-center">
