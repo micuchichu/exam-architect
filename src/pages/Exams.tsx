@@ -3,6 +3,7 @@ import { getQuestions, getExams, saveExam, deleteExam } from '@/lib/store';
 import { generateExam } from '@/lib/generator';
 import { getImages } from '@/lib/idb';
 import { cropImageToContent } from '@/lib/cropImage';
+import examHeaderSrc from '@/assets/exam-header.png';
 import { GeneratedExam, QUESTION_TYPE_LABELS, DIFFICULTY_LABELS } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
