@@ -4,13 +4,14 @@ import { generateExam } from '@/lib/generator';
 import { getImages } from '@/lib/idb';
 import { cropImageToContent } from '@/lib/cropImage';
 import examHeaderSrc from '@/assets/exam-header.png';
-import { GeneratedExam, QUESTION_TYPE_LABELS, DIFFICULTY_LABELS } from '@/lib/types';
+import { GeneratedExam, ExamSettings, QUESTION_TYPE_LABELS, DIFFICULTY_LABELS } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Sparkles, Trash2, ChevronDown, ChevronUp, Download } from 'lucide-react';
 import { toast } from 'sonner';
 import Layout from '@/components/Layout';
+import ExamSettingsPanel from '@/components/ExamSettingsPanel';
 
 function DifficultyDot({ difficulty }: { difficulty: string }) {
   const colors: Record<string, string> = {
