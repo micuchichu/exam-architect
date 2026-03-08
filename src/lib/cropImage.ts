@@ -1,8 +1,15 @@
+export interface CropResult {
+  dataUrl: string;
+  originalWidth: number;
+  croppedWidth: number;
+  croppedHeight: number;
+}
+
 /**
  * Crops an image to the bounding box of dark pixels (text).
- * Scans for pixels darker than a threshold and trims whitespace.
+ * Returns the cropped image plus original width for uniform scaling.
  */
-export function cropImageToContent(dataUrl: string, threshold = 180, padding = 10): Promise<string> {
+export function cropImageToContent(dataUrl: string, threshold = 180, padding = 10): Promise<CropResult> {
   return new Promise((resolve, reject) => {
     const img = new window.Image();
     img.onload = () => {
@@ -21,7 +28,6 @@ export function cropImageToContent(dataUrl: string, threshold = 180, padding = 1
         for (let x = 0; x < width; x++) {
           const i = (y * width + x) * 4;
           const r = data[i], g = data[i + 1], b = data[i + 2];
-          // Check if pixel is dark enough to be text
           if (r < threshold && g < threshold && b < threshold) {
             if (y < minY) minY = y;
             if (y > maxY) maxY = y;
@@ -33,11 +39,10 @@ export function cropImageToContent(dataUrl: string, threshold = 180, padding = 1
 
       // No dark pixels found — return original
       if (minY >= maxY || minX >= maxX) {
-        resolve(dataUrl);
+        resolve({ dataUrl, originalWidth: img.width, croppedWidth: img.width, croppedHeight: img.height });
         return;
       }
 
-      // Add padding
       minX = Math.max(0, minX - padding);
       minY = Math.max(0, minY - padding);
       maxX = Math.min(width - 1, maxX + padding);
@@ -54,7 +59,12 @@ export function cropImageToContent(dataUrl: string, threshold = 180, padding = 1
       cropCtx.fillRect(0, 0, cropW, cropH);
       cropCtx.drawImage(img, minX, minY, cropW, cropH, 0, 0, cropW, cropH);
 
-      resolve(cropCanvas.toDataURL('image/png'));
+      resolve({
+        dataUrl: cropCanvas.toDataURL('image/png'),
+        originalWidth: img.width,
+        croppedWidth: cropW,
+        croppedHeight: cropH,
+      });
     };
     img.onerror = reject;
     img.src = dataUrl;
