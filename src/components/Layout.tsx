@@ -1,6 +1,7 @@
 import { Link, useLocation } from 'react-router-dom';
 import { BookOpen, PlusCircle, FileText, FolderUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { ThemeToggle } from '@/components/ThemeToggle';
 
 const navItems = [
   { to: '/', label: 'Question Bank', icon: BookOpen },
