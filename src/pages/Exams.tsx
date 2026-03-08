@@ -21,78 +21,71 @@ function DifficultyDot({ difficulty }: { difficulty: string }) {
 }
 
 function ExamImageViewer({ exam }: { exam: GeneratedExam }) {
-  const [imageUrls, setImageUrls] = useState<Map<string, string>>(new Map());
-  const [stitching, setStitching] = useState(false);
+  const [stitchedUrl, setStitchedUrl] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
   const imageQuestionIds = exam.questions
     .filter(q => q.hasImage)
     .map(q => q.id);
 
+  const buildStitched = useCallback(async () => {
+    const images = await getImages(imageQuestionIds);
+    if (images.size === 0) return null;
+
+    const loadedImages: HTMLImageElement[] = [];
+    for (const q of exam.questions) {
+      const dataUrl = images.get(q.id);
+      if (!dataUrl) continue;
+      const cropped = await cropImageToContent(dataUrl);
+      const img = await new Promise<HTMLImageElement>((resolve, reject) => {
+        const i = new window.Image();
+        i.onload = () => resolve(i);
+        i.onerror = reject;
+        i.src = cropped;
+      });
+      loadedImages.push(img);
+    }
+
+    if (loadedImages.length === 0) return null;
+
+    const maxWidth = Math.max(...loadedImages.map(i => i.width));
+    const padding = 20;
+    const totalHeight = loadedImages.reduce((sum, img) => sum + img.height + padding, padding);
+
+    const canvas = document.createElement('canvas');
+    canvas.width = maxWidth + padding * 2;
+    canvas.height = totalHeight;
+    const ctx = canvas.getContext('2d')!;
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    let y = padding;
+    for (const img of loadedImages) {
+      const x = Math.floor((maxWidth - img.width) / 2) + padding;
+      ctx.drawImage(img, x, y);
+      y += img.height + padding;
+    }
+
+    return canvas.toDataURL('image/png');
+  }, [exam]);
+
   useEffect(() => {
     if (imageQuestionIds.length > 0) {
-      getImages(imageQuestionIds).then(async (urls) => {
-        const cropped = new Map<string, string>();
-        for (const [id, dataUrl] of urls) {
-          cropped.set(id, await cropImageToContent(dataUrl));
-        }
-        setImageUrls(cropped);
+      setLoading(true);
+      buildStitched().then(url => {
+        setStitchedUrl(url);
+        setLoading(false);
       });
     }
   }, [exam.id]);
 
-  const handleDownloadStitched = useCallback(async () => {
-    const ids = exam.questions.filter(q => q.hasImage).map(q => q.id);
-    const images = await getImages(ids);
-    if (images.size === 0) return;
-
-    setStitching(true);
-
-    try {
-      // Load all images to get dimensions
-      const loadedImages: HTMLImageElement[] = [];
-      for (const q of exam.questions) {
-        const dataUrl = images.get(q.id);
-        if (!dataUrl) continue;
-        const img = await new Promise<HTMLImageElement>((resolve, reject) => {
-          const i = new window.Image();
-          i.onload = () => resolve(i);
-          i.onerror = reject;
-          i.src = dataUrl;
-        });
-        loadedImages.push(img);
-      }
-
-      if (loadedImages.length === 0) return;
-
-      const maxWidth = Math.max(...loadedImages.map(i => i.width));
-      const padding = 20;
-      const totalHeight = loadedImages.reduce((sum, img) => sum + img.height + padding, padding);
-
-      const canvas = document.createElement('canvas');
-      canvas.width = maxWidth + padding * 2;
-      canvas.height = totalHeight;
-      const ctx = canvas.getContext('2d')!;
-
-      // White background
-      ctx.fillStyle = '#ffffff';
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-      let y = padding;
-      for (const img of loadedImages) {
-        const x = Math.floor((maxWidth - img.width) / 2) + padding;
-        ctx.drawImage(img, x, y);
-        y += img.height + padding;
-      }
-
-      // Download
-      const link = document.createElement('a');
-      link.download = `exam-${new Date(exam.createdAt).toISOString().slice(0, 10)}.png`;
-      link.href = canvas.toDataURL('image/png');
-      link.click();
-    } finally {
-      setStitching(false);
-    }
-  }, [exam]);
+  const handleDownload = () => {
+    if (!stitchedUrl) return;
+    const link = document.createElement('a');
+    link.download = `exam-${new Date(exam.createdAt).toISOString().slice(0, 10)}.png`;
+    link.href = stitchedUrl;
+    link.click();
+  };
 
   return (
     <div className="border-t px-4 pb-4">
@@ -102,41 +95,39 @@ function ExamImageViewer({ exam }: { exam: GeneratedExam }) {
             variant="outline"
             size="sm"
             className="gap-2"
-            onClick={handleDownloadStitched}
-            disabled={stitching}
+            onClick={handleDownload}
+            disabled={!stitchedUrl}
           >
             <Download className="h-4 w-4" />
-            {stitching ? 'Stitching...' : 'Download Stitched Image'}
+            Download Stitched Image
           </Button>
         </div>
       )}
-      <ol className="mt-4 space-y-3">
-        {exam.questions.map((q, i) => (
-          <li key={q.id} className="flex gap-3 rounded-lg bg-secondary/40 p-3">
-            <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded bg-primary/10 font-mono text-xs font-bold text-primary">
-              {i + 1}
-            </span>
-            <div className="flex-1 min-w-0">
-              {q.hasImage && imageUrls.has(q.id) ? (
-                <img
-                  src={imageUrls.get(q.id)}
-                  alt={`Question ${i + 1}`}
-                  className="rounded-md max-w-full"
-                />
-              ) : (
+      {loading ? (
+        <p className="py-8 text-center text-sm text-muted-foreground">Stitching images…</p>
+      ) : stitchedUrl ? (
+        <img src={stitchedUrl} alt="Full exam" className="mt-4 rounded-md max-w-full" />
+      ) : (
+        <ol className="mt-4 space-y-3">
+          {exam.questions.map((q, i) => (
+            <li key={q.id} className="flex gap-3 rounded-lg bg-secondary/40 p-3">
+              <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded bg-primary/10 font-mono text-xs font-bold text-primary">
+                {i + 1}
+              </span>
+              <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium">{q.text}</p>
-              )}
-              <div className="mt-1.5 flex gap-2">
-                <span className="flex items-center gap-1 text-xs text-muted-foreground">
-                  <DifficultyDot difficulty={q.difficulty} />
-                  {DIFFICULTY_LABELS[q.difficulty]}
-                </span>
-                <Badge variant="outline" className="text-[10px] px-1.5">{QUESTION_TYPE_LABELS[q.type]}</Badge>
+                <div className="mt-1.5 flex gap-2">
+                  <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                    <DifficultyDot difficulty={q.difficulty} />
+                    {DIFFICULTY_LABELS[q.difficulty]}
+                  </span>
+                  <Badge variant="outline" className="text-[10px] px-1.5">{QUESTION_TYPE_LABELS[q.type] || q.type}</Badge>
+                </div>
               </div>
-            </div>
-          </li>
-        ))}
-      </ol>
+            </li>
+          ))}
+        </ol>
+      )}
     </div>
   );
 }
