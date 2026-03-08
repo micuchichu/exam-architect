@@ -82,7 +82,7 @@ function ExamImageViewer({ exam }: { exam: GeneratedExam }) {
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     // Draw header
-    ctx.drawImage(headerImg, padding, padding, canvasWidth - padding * 2, headerHeight);
+    ctx.drawImage(headerImg, padding, padding, headerImg.width, headerHeight);
 
     let y = padding + headerHeight + padding;
     for (let idx = 0; idx < cropResults.length; idx++) {
