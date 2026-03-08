@@ -73,7 +73,7 @@ export default function UploadQuestions() {
       const result = parseFilename(file.name);
       const preview = URL.createObjectURL(file);
       if (result) {
-        parsed.push({ file, difficulty: result.difficulty, type: result.type, label: file.name, preview });
+        parsed.push({ file, difficulty: result.difficulty, type: result.type, subtype: result.subtype, label: file.name, preview });
       } else {
         parsed.push({
           file,
