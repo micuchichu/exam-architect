@@ -200,9 +200,16 @@ export default function Index() {
                   {q.subtype && <Badge variant="secondary" className="text-xs">{q.subtype}</Badge>}
                 </div>
               </div>
-              <Button variant="ghost" size="icon" className="shrink-0 text-muted-foreground hover:text-destructive" onClick={() => handleDelete(q.id)}>
-                <Trash2 className="h-4 w-4" />
-              </Button>
+              <div className="flex shrink-0 gap-1">
+                {q.hasImage && (
+                  <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-primary" onClick={() => handlePreview(q)}>
+                    <Eye className="h-4 w-4" />
+                  </Button>
+                )}
+                <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-destructive" onClick={() => handleDelete(q.id)}>
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
             </Card>
           ))}
         </div>
