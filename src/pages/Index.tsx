@@ -60,6 +60,7 @@ export default function Index() {
                 <div className="mt-2 flex flex-wrap gap-2">
                   <DifficultyBadge difficulty={q.difficulty} />
                   <Badge variant="outline" className="text-xs">{QUESTION_TYPE_LABELS[q.type]}</Badge>
+                  {q.subtype && <Badge variant="secondary" className="text-xs">{q.subtype}</Badge>}
                 </div>
               </div>
               <Button variant="ghost" size="icon" className="shrink-0 text-muted-foreground hover:text-destructive" onClick={() => handleDelete(q.id)}>
