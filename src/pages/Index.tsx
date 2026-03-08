@@ -102,6 +102,17 @@ export default function Index() {
     toast.success('All questions deleted');
   };
 
+  const [previewQuestion, setPreviewQuestion] = useState<Question | null>(null);
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
+
+  const handlePreview = async (q: Question) => {
+    setPreviewQuestion(q);
+    if (q.hasImage) {
+      const img = await getImage(q.id);
+      setPreviewImage(img || null);
+    }
+  };
+
   const toggleSortDir = () => setSortDir(d => d === 'asc' ? 'desc' : 'asc');
 
   return (
