@@ -39,6 +39,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 {label}
               </Link>
             ))}
+            <ThemeToggle />
           </nav>
         </div>
       </header>
