@@ -172,14 +172,21 @@ function ExamImageViewer({ exam }: { exam: GeneratedExam }) {
 export default function Exams() {
   const [exams, setExams] = useState<GeneratedExam[]>([]);
   const [expanded, setExpanded] = useState<string | null>(null);
+  const [questions, setQuestions] = useState<ReturnType<typeof getQuestions>>([]);
+  const [settings, setSettings] = useState<ExamSettings>({
+    excludedTypes: [],
+    excludedSubtypes: [],
+    difficultyBias: 3,
+    typeWeights: {},
+  });
 
   useEffect(() => {
     setExams(getExams());
+    setQuestions(getQuestions());
   }, []);
 
   const handleGenerate = () => {
-    const questions = getQuestions();
-    const result = generateExam(questions);
+    const result = generateExam(questions, settings);
     if ('error' in result) {
       toast.error(result.error);
       return;
