@@ -60,8 +60,18 @@ function ExamImageViewer({ exam }: { exam: GeneratedExam }) {
       return { width: Math.round(img.width * scale), height: Math.round(img.height * scale) };
     });
 
-    const canvasWidth = Math.max(...scaledDims.map(d => d.width)) + padding * 2;
-    const totalHeight = scaledDims.reduce((sum, d) => sum + d.height + padding, padding);
+    // Load header image
+    const headerImg = await new Promise<HTMLImageElement>((resolve, reject) => {
+      const i = new window.Image();
+      i.onload = () => resolve(i);
+      i.onerror = reject;
+      i.src = examHeaderSrc;
+    });
+
+    const canvasWidth = Math.max(...scaledDims.map(d => d.width), headerImg.width) + padding * 2;
+    const headerScale = (canvasWidth - padding * 2) / headerImg.width;
+    const headerHeight = Math.round(headerImg.height * headerScale);
+    const totalHeight = headerHeight + padding + scaledDims.reduce((sum, d) => sum + d.height + padding, padding);
 
     const canvas = document.createElement('canvas');
     canvas.width = canvasWidth;
@@ -70,7 +80,10 @@ function ExamImageViewer({ exam }: { exam: GeneratedExam }) {
     ctx.fillStyle = '#ffffff';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    let y = padding;
+    // Draw header
+    ctx.drawImage(headerImg, padding, padding, canvasWidth - padding * 2, headerHeight);
+
+    let y = padding + headerHeight + padding;
     for (let idx = 0; idx < cropResults.length; idx++) {
       const { img } = cropResults[idx];
       const dims = scaledDims[idx];
