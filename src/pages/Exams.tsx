@@ -216,7 +216,9 @@ export default function Exams() {
         </Button>
       </div>
 
-      {exams.length === 0 ? (
+      <ExamSettingsPanel questions={questions} settings={settings} onChange={setSettings} />
+
+
         <Card className="flex flex-col items-center justify-center py-16 text-center">
           <p className="text-lg font-medium text-muted-foreground">No exams yet</p>
           <p className="mt-1 text-sm text-muted-foreground">Generate your first exam from the question bank</p>
