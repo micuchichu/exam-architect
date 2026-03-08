@@ -14,6 +14,7 @@ interface ParsedFile {
   file: File;
   difficulty: Difficulty;
   type: QuestionType;
+  subtype?: string;
   label: string;
   preview?: string;
   error?: string;
