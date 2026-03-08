@@ -32,7 +32,7 @@ function ExamImageViewer({ exam }: { exam: GeneratedExam }) {
     const images = await getImages(imageQuestionIds);
     if (images.size === 0) return null;
 
-    const cropResults: { img: HTMLImageElement; originalWidth: number }[] = [];
+    const cropResults: { img: HTMLImageElement; avgRunLength: number }[] = [];
     for (const q of exam.questions) {
       const dataUrl = images.get(q.id);
       if (!dataUrl) continue;
@@ -43,19 +43,19 @@ function ExamImageViewer({ exam }: { exam: GeneratedExam }) {
         i.onerror = reject;
         i.src = cropped.dataUrl;
       });
-      cropResults.push({ img, originalWidth: cropped.originalWidth });
+      cropResults.push({ img, avgRunLength: cropped.avgRunLength });
     }
 
     if (cropResults.length === 0) return null;
 
-    // Use a uniform scale factor based on the max original width
-    // so all images keep consistent text size
-    const maxOriginalWidth = Math.max(...cropResults.map(r => r.originalWidth));
-    const targetWidth = maxOriginalWidth;
+    // Normalize text size: scale each image so its avgRunLength matches the median
+    const runs = cropResults.map(r => r.avgRunLength).filter(r => r > 0);
+    const sortedRuns = [...runs].sort((a, b) => a - b);
+    const targetRun = sortedRuns[Math.floor(sortedRuns.length / 2)] || 1;
     const padding = 20;
 
-    const scaledDims = cropResults.map(({ img, originalWidth }) => {
-      const scale = targetWidth / originalWidth;
+    const scaledDims = cropResults.map(({ img, avgRunLength }) => {
+      const scale = avgRunLength > 0 ? targetRun / avgRunLength : 1;
       return { width: Math.round(img.width * scale), height: Math.round(img.height * scale) };
     });
 
