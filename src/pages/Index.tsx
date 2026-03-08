@@ -225,6 +225,26 @@ export default function Index() {
           ))}
         </div>
       )}
+
+      <Dialog open={!!previewQuestion} onOpenChange={(open) => { if (!open) { setPreviewQuestion(null); setPreviewImage(null); } }}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>{previewQuestion?.text}</DialogTitle>
+          </DialogHeader>
+          {previewQuestion && (
+            <div className="space-y-3">
+              <div className="flex flex-wrap gap-2">
+                <DifficultyBadge difficulty={previewQuestion.difficulty} />
+                <Badge variant="outline" className="text-xs">{QUESTION_TYPE_LABELS[previewQuestion.type as keyof typeof QUESTION_TYPE_LABELS] || previewQuestion.type}</Badge>
+                {previewQuestion.subtype && <Badge variant="secondary" className="text-xs">{previewQuestion.subtype}</Badge>}
+              </div>
+              {previewImage && (
+                <img src={previewImage} alt="Question" className="w-full rounded-md" />
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </Layout>
   );
 }
