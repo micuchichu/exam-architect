@@ -14,6 +14,7 @@ interface ParsedFile {
   file: File;
   difficulty: Difficulty;
   type: QuestionType;
+  subtype?: string;
   label: string;
   preview?: string;
   error?: string;
@@ -72,7 +73,7 @@ export default function UploadQuestions() {
       const result = parseFilename(file.name);
       const preview = URL.createObjectURL(file);
       if (result) {
-        parsed.push({ file, difficulty: result.difficulty, type: result.type, label: file.name, preview });
+        parsed.push({ file, difficulty: result.difficulty, type: result.type, subtype: result.subtype, label: file.name, preview });
       } else {
         parsed.push({
           file,
@@ -105,6 +106,7 @@ export default function UploadQuestions() {
           id,
           text: pf.file.name,
           type: pf.type,
+          subtype: pf.subtype,
           difficulty: pf.difficulty,
           correctAnswer: '',
           createdAt: new Date().toISOString(),
