@@ -20,7 +20,7 @@ function reParseFromFilename(q: Question): Question {
     ...q,
     difficulty: difficulty || q.difficulty,
     type: type || q.type,
-    subtype: subtypeParts.join('-') || q.subtype,
+    subtype: (subtypeParts.join('-') || q.subtype || '').replace(/([a-z])([A-Z])/g, '$1 $2').toLowerCase(),
   };
 }
 

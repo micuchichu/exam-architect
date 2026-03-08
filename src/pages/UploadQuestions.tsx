@@ -35,7 +35,9 @@ function parseFilename(name: string): { difficulty: Difficulty; type: string; su
   if (parts.length < 5) return null;
 
   const [id, _x, diff, type, ...subtypeParts] = parts;
-  const subtype = subtypeParts.join('-');
+  const rawSubtype = subtypeParts.join('-');
+  // Split camelCase into spaced words (e.g. "apTrigGeo" -> "ap trig geo")
+  const subtype = rawSubtype.replace(/([a-z])([A-Z])/g, '$1 $2').toLowerCase();
 
   const difficulty = DIFFICULTY_ALIASES[diff];
   if (!difficulty) return null;
