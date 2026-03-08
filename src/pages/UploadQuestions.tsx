@@ -13,7 +13,7 @@ import { Upload, FolderOpen, Check, AlertCircle, Image } from 'lucide-react';
 interface ParsedFile {
   file: File;
   difficulty: Difficulty;
-  type: QuestionType;
+  type: string;
   subtype?: string;
   label: string;
   preview?: string;
