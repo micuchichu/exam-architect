@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { getQuestions, getExams, saveExam, deleteExam } from '@/lib/store';
 import { generateExam } from '@/lib/generator';
 import { getImages } from '@/lib/idb';
+import { cropImageToContent } from '@/lib/cropImage';
 import { GeneratedExam, QUESTION_TYPE_LABELS, DIFFICULTY_LABELS } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -29,7 +30,13 @@ function ExamImageViewer({ exam }: { exam: GeneratedExam }) {
 
   useEffect(() => {
     if (imageQuestionIds.length > 0) {
-      getImages(imageQuestionIds).then(setImageUrls);
+      getImages(imageQuestionIds).then(async (urls) => {
+        const cropped = new Map<string, string>();
+        for (const [id, dataUrl] of urls) {
+          cropped.set(id, await cropImageToContent(dataUrl));
+        }
+        setImageUrls(cropped);
+      });
     }
   }, [exam.id]);
 
