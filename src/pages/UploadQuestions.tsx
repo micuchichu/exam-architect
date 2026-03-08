@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { saveQuestion, uploadQuestionImage } from '@/lib/store';
+import { saveQuestionsBulk, uploadQuestionImage } from '@/lib/store';
 import { Difficulty, DIFFICULTY_LABELS } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
