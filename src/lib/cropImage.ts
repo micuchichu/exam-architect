@@ -3,6 +3,7 @@ export interface CropResult {
   originalWidth: number;
   croppedWidth: number;
   croppedHeight: number;
+  avgRunLength: number; // average horizontal black pixel run length (text size indicator)
 }
 
 /**
