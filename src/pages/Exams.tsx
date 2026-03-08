@@ -32,7 +32,7 @@ function ExamImageViewer({ exam }: { exam: GeneratedExam }) {
     const images = await getImages(imageQuestionIds);
     if (images.size === 0) return null;
 
-    const loadedImages: HTMLImageElement[] = [];
+    const cropResults: { img: HTMLImageElement; originalWidth: number }[] = [];
     for (const q of exam.questions) {
       const dataUrl = images.get(q.id);
       if (!dataUrl) continue;
@@ -41,35 +41,37 @@ function ExamImageViewer({ exam }: { exam: GeneratedExam }) {
         const i = new window.Image();
         i.onload = () => resolve(i);
         i.onerror = reject;
-        i.src = cropped;
+        i.src = cropped.dataUrl;
       });
-      loadedImages.push(img);
+      cropResults.push({ img, originalWidth: cropped.originalWidth });
     }
 
-    if (loadedImages.length === 0) return null;
+    if (cropResults.length === 0) return null;
 
-    // Normalize all images to the same width
-    const targetWidth = Math.max(...loadedImages.map(i => i.width));
+    // Use a uniform scale factor based on the max original width
+    // so all images keep consistent text size
+    const maxOriginalWidth = Math.max(...cropResults.map(r => r.originalWidth));
+    const targetWidth = maxOriginalWidth;
     const padding = 20;
 
-    // Calculate scaled heights
-    const scaledDims = loadedImages.map(img => {
-      const scale = targetWidth / img.width;
-      return { width: targetWidth, height: Math.round(img.height * scale) };
+    const scaledDims = cropResults.map(({ img, originalWidth }) => {
+      const scale = targetWidth / originalWidth;
+      return { width: Math.round(img.width * scale), height: Math.round(img.height * scale) };
     });
 
+    const canvasWidth = Math.max(...scaledDims.map(d => d.width)) + padding * 2;
     const totalHeight = scaledDims.reduce((sum, d) => sum + d.height + padding, padding);
 
     const canvas = document.createElement('canvas');
-    canvas.width = targetWidth + padding * 2;
+    canvas.width = canvasWidth;
     canvas.height = totalHeight;
     const ctx = canvas.getContext('2d')!;
     ctx.fillStyle = '#ffffff';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     let y = padding;
-    for (let idx = 0; idx < loadedImages.length; idx++) {
-      const img = loadedImages[idx];
+    for (let idx = 0; idx < cropResults.length; idx++) {
+      const { img } = cropResults[idx];
       const dims = scaledDims[idx];
       ctx.drawImage(img, padding, y, dims.width, dims.height);
       y += dims.height + padding;
