@@ -26,10 +26,10 @@ const DIFFICULTY_ALIASES: Record<string, Difficulty> = {
   c: 'hard',
 };
 
-function parseFilename(name: string): { difficulty: Difficulty; type: QuestionType; id: string; subtype: string } | null {
+function parseFilename(name: string): { difficulty: Difficulty; type: string; subtype: string; id: string } | null {
   // Remove extension
   const base = name.replace(/\.\w+$/, '').toLowerCase();
-  // Format: id-x-diff-type-subtype
+  // Format: id-x-diff-type-subtype (e.g. 760-x-c-analiza-derivabilitate.png)
   const parts = base.split(/\-/);
 
   if (parts.length < 5) return null;
@@ -40,7 +40,7 @@ function parseFilename(name: string): { difficulty: Difficulty; type: QuestionTy
   const difficulty = DIFFICULTY_ALIASES[diff];
   if (!difficulty) return null;
 
-  return { difficulty, type: 'multiple-choice' as QuestionType, id, subtype: `${type}${subtype ? '-' + subtype : ''}` };
+  return { difficulty, type, subtype, id };
 }
 
 function readFileAsDataUrl(file: File): Promise<string> {
