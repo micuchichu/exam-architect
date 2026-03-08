@@ -19,63 +19,28 @@ interface ParsedFile {
   error?: string;
 }
 
-const TYPE_ALIASES: Record<string, QuestionType> = {
-  'multiple-choice': 'multiple-choice',
-  'mc': 'multiple-choice',
-  'multiplechoice': 'multiple-choice',
-  'true-false': 'true-false',
-  'tf': 'true-false',
-  'truefalse': 'true-false',
-  'short-answer': 'short-answer',
-  'sa': 'short-answer',
-  'shortanswer': 'short-answer',
-  'fill-blank': 'fill-blank',
-  'fb': 'fill-blank',
-  'fillblank': 'fill-blank',
-  'fill': 'fill-blank',
-};
-
 const DIFFICULTY_ALIASES: Record<string, Difficulty> = {
-  easy: 'easy',
-  e: 'easy',
-  medium: 'medium',
-  med: 'medium',
-  m: 'medium',
-  hard: 'hard',
-  h: 'hard',
+  a: 'easy',
+  b: 'medium',
+  c: 'hard',
 };
 
-function parseFilename(name: string): { difficulty: Difficulty; type: QuestionType } | null {
+function parseFilename(name: string): { difficulty: Difficulty; type: QuestionType; id: string; subtype: string } | null {
   // Remove extension
   const base = name.replace(/\.\w+$/, '').toLowerCase();
-  // Split by _ or -
-  const parts = base.split(/[_\-]+/);
+  // Format: id-diff-type-subtype
+  const parts = base.split(/\-/);
 
-  let difficulty: Difficulty | null = null;
-  let type: QuestionType | null = null;
+  if (parts.length < 4) return null;
 
-  for (const part of parts) {
-    if (!difficulty && DIFFICULTY_ALIASES[part]) {
-      difficulty = DIFFICULTY_ALIASES[part];
-    }
-    if (!type && TYPE_ALIASES[part]) {
-      type = TYPE_ALIASES[part];
-    }
-  }
+  const [id, diff, type, ...subtypeParts] = parts;
+  const subtype = subtypeParts.join('-');
 
-  // Try combining adjacent parts for multi-word types like "multiple-choice"
-  if (!type) {
-    for (let i = 0; i < parts.length - 1; i++) {
-      const combined = parts[i] + '-' + parts[i + 1];
-      if (TYPE_ALIASES[combined]) {
-        type = TYPE_ALIASES[combined];
-        break;
-      }
-    }
-  }
+  const difficulty = DIFFICULTY_ALIASES[diff];
+  if (!difficulty) return null;
 
-  if (!difficulty || !type) return null;
-  return { difficulty, type };
+  // Accept any type/subtype — store as metadata
+  return { difficulty, type: 'multiple-choice' as QuestionType, id, subtype: `${type}-${subtype}` };
 }
 
 function readFileAsDataUrl(file: File): Promise<string> {
@@ -108,7 +73,7 @@ export default function UploadQuestions() {
       const result = parseFilename(file.name);
       const preview = URL.createObjectURL(file);
       if (result) {
-        parsed.push({ file, ...result, label: file.name, preview });
+        parsed.push({ file, difficulty: result.difficulty, type: result.type, label: file.name, preview });
       } else {
         parsed.push({
           file,
@@ -116,7 +81,7 @@ export default function UploadQuestions() {
           type: 'multiple-choice',
           label: file.name,
           preview,
-          error: 'Could not parse filename. Expected format: difficulty_type_number.png (e.g., hard_mc_01.png)',
+          error: 'Could not parse filename. Expected format: id-diff-type-subtype.png (e.g., 001-c-algebra-polynomial.png)',
         });
       }
     }
@@ -162,23 +127,17 @@ export default function UploadQuestions() {
       <div className="mx-auto max-w-3xl">
         <h1 className="text-3xl font-bold tracking-tight mb-2">Upload Questions</h1>
         <p className="text-muted-foreground mb-8">
-          Select a folder of question images. Name files like: <code className="rounded bg-secondary px-1.5 py-0.5 text-xs font-mono">hard_mc_01.png</code>
+          Select a folder of question images. Name files like: <code className="rounded bg-secondary px-1.5 py-0.5 text-xs font-mono">001-c-algebra-polynomial.png</code>
         </p>
 
         <Card className="p-6 mb-6">
           <div className="space-y-4">
             <div className="text-sm text-muted-foreground space-y-1">
               <p className="font-medium text-foreground">Filename format:</p>
-              <p><code className="rounded bg-secondary px-1 py-0.5 text-xs font-mono">{'{difficulty}_{type}_{number}.png'}</code></p>
-              <div className="grid grid-cols-2 gap-4 mt-3">
-                <div>
-                  <p className="font-medium text-foreground text-xs mb-1">Difficulty codes</p>
-                  <p className="text-xs">easy / e, medium / med / m, hard / h</p>
-                </div>
-                <div>
-                  <p className="font-medium text-foreground text-xs mb-1">Type codes</p>
-                  <p className="text-xs">mc, tf, sa, fb (or full names)</p>
-                </div>
+              <p><code className="rounded bg-secondary px-1 py-0.5 text-xs font-mono">{'{id}-{diff}-{type}-{subtype}.png'}</code></p>
+              <div className="mt-3">
+                <p className="font-medium text-foreground text-xs mb-1">Difficulty codes</p>
+                <p className="text-xs">a = Easy, b = Medium, c = Hard</p>
               </div>
             </div>
 
