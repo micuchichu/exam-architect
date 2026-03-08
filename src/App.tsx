@@ -14,6 +14,7 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
+
 function AdminRoute({ children }: { children: React.ReactNode }) {
   const { isAdmin, loading } = useAuth();
   if (loading) return null;
