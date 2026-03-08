@@ -4,7 +4,7 @@ import { generateExam } from '@/lib/generator';
 import { getImages } from '@/lib/idb';
 import { cropImageToContent } from '@/lib/cropImage';
 import examHeaderSrc from '@/assets/exam-header.png';
-import { GeneratedExam, ExamSettings, QUESTION_TYPE_LABELS, DIFFICULTY_LABELS } from '@/lib/types';
+import { GeneratedExam, Question, ExamSettings, QUESTION_TYPE_LABELS, DIFFICULTY_LABELS } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -26,21 +26,19 @@ function ExamImageViewer({ exam }: { exam: GeneratedExam }) {
   const [stitchedUrl, setStitchedUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  const imageQuestionIds = exam.questions
-    .filter(q => q.hasImage)
-    .map(q => q.id);
+  const imageQuestions = exam.questions.filter(q => q.hasImage);
 
   const buildStitched = useCallback(async () => {
-    const images = await getImages(imageQuestionIds);
-    if (images.size === 0) return null;
+    if (imageQuestions.length === 0) return null;
 
     const cropResults: { img: HTMLImageElement; avgRunLength: number }[] = [];
     for (const q of exam.questions) {
-      const dataUrl = images.get(q.id);
-      if (!dataUrl) continue;
-      const cropped = await cropImageToContent(dataUrl);
+      const src = q.imageUrl;
+      if (!src) continue;
+      const cropped = await cropImageToContent(src);
       const img = await new Promise<HTMLImageElement>((resolve, reject) => {
         const i = new window.Image();
+        i.crossOrigin = 'anonymous';
         i.onload = () => resolve(i);
         i.onerror = reject;
         i.src = cropped.dataUrl;
@@ -50,7 +48,6 @@ function ExamImageViewer({ exam }: { exam: GeneratedExam }) {
 
     if (cropResults.length === 0) return null;
 
-    // Normalize text size using avgRunLength, then shrink to ~65% for a compact left-aligned layout
     const runs = cropResults.map(r => r.avgRunLength).filter(r => r > 0);
     const sortedRuns = [...runs].sort((a, b) => a - b);
     const targetRun = sortedRuns[Math.floor(sortedRuns.length / 2)] || 1;
@@ -62,7 +59,6 @@ function ExamImageViewer({ exam }: { exam: GeneratedExam }) {
       return { width: Math.round(img.width * scale), height: Math.round(img.height * scale) };
     });
 
-    // Load header image
     const headerImg = await new Promise<HTMLImageElement>((resolve, reject) => {
       const i = new window.Image();
       i.onload = () => resolve(i);
@@ -71,8 +67,7 @@ function ExamImageViewer({ exam }: { exam: GeneratedExam }) {
     });
 
     const canvasWidth = Math.max(headerImg.width, ...scaledDims.map(d => d.width)) + padding * 2;
-    const headerScale = 1;
-    const headerHeight = Math.round(headerImg.height * headerScale);
+    const headerHeight = Math.round(headerImg.height);
     const totalHeight = headerHeight + padding + scaledDims.reduce((sum, d) => sum + d.height + padding, padding);
 
     const canvas = document.createElement('canvas');
@@ -82,7 +77,6 @@ function ExamImageViewer({ exam }: { exam: GeneratedExam }) {
     ctx.fillStyle = '#ffffff';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Draw header
     ctx.drawImage(headerImg, padding, padding, headerImg.width, headerHeight);
 
     let y = padding + headerHeight + padding;
@@ -92,7 +86,6 @@ function ExamImageViewer({ exam }: { exam: GeneratedExam }) {
       ctx.drawImage(img, padding, y, dims.width, dims.height);
       y += dims.height + padding;
 
-      // Draw separator line between questions
       if (idx < cropResults.length - 1) {
         ctx.strokeStyle = '#000000';
         ctx.lineWidth = 1;
@@ -107,7 +100,7 @@ function ExamImageViewer({ exam }: { exam: GeneratedExam }) {
   }, [exam]);
 
   useEffect(() => {
-    if (imageQuestionIds.length > 0) {
+    if (imageQuestions.length > 0) {
       setLoading(true);
       buildStitched().then(url => {
         setStitchedUrl(url);
@@ -126,17 +119,10 @@ function ExamImageViewer({ exam }: { exam: GeneratedExam }) {
 
   return (
     <div className="border-t px-4 pb-4">
-      {imageQuestionIds.length > 0 && (
+      {imageQuestions.length > 0 && (
         <div className="mt-3 mb-2 flex justify-end">
-          <Button
-            variant="outline"
-            size="sm"
-            className="gap-2"
-            onClick={handleDownload}
-            disabled={!stitchedUrl}
-          >
-            <Download className="h-4 w-4" />
-            Download Stitched Image
+          <Button variant="outline" size="sm" className="gap-2" onClick={handleDownload} disabled={!stitchedUrl}>
+            <Download className="h-4 w-4" /> Download Stitched Image
           </Button>
         </div>
       )}
@@ -172,7 +158,7 @@ function ExamImageViewer({ exam }: { exam: GeneratedExam }) {
 export default function Exams() {
   const [exams, setExams] = useState<GeneratedExam[]>([]);
   const [expanded, setExpanded] = useState<string | null>(null);
-  const [questions, setQuestions] = useState<ReturnType<typeof getQuestions>>([]);
+  const [questions, setQuestions] = useState<Question[]>([]);
   const [settings, setSettings] = useState<ExamSettings>({
     excludedTypes: [],
     excludedSubtypes: [],
@@ -181,25 +167,27 @@ export default function Exams() {
   });
 
   useEffect(() => {
-    setExams(getExams());
-    setQuestions(getQuestions());
+    getExams().then(setExams);
+    getQuestions().then(setQuestions);
   }, []);
 
-  const handleGenerate = () => {
+  const handleGenerate = async () => {
     const result = generateExam(questions, settings);
     if ('error' in result) {
       toast.error(result.error);
       return;
     }
-    saveExam(result);
-    setExams(getExams());
+    await saveExam(result);
+    const updated = await getExams();
+    setExams(updated);
     setExpanded(result.id);
     toast.success('Exam generated!');
   };
 
-  const handleDelete = (id: string) => {
-    deleteExam(id);
-    setExams(getExams());
+  const handleDelete = async (id: string) => {
+    await deleteExam(id);
+    const updated = await getExams();
+    setExams(updated);
     if (expanded === id) setExpanded(null);
     toast.success('Exam deleted');
   };

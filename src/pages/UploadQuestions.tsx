@@ -1,8 +1,7 @@
 import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { saveQuestion } from '@/lib/store';
-import { saveImage } from '@/lib/idb';
-import { QuestionType, Difficulty, QUESTION_TYPE_LABELS, DIFFICULTY_LABELS } from '@/lib/types';
+import { saveQuestion, uploadQuestionImage } from '@/lib/store';
+import { Difficulty, DIFFICULTY_LABELS } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -29,26 +28,13 @@ const DIFFICULTY_ALIASES: Record<string, Difficulty> = {
 function parseFilename(name: string): { difficulty: Difficulty; type: string; subtype: string; id: string } | null {
   const base = name.replace(/\.\w+$/, '').toLowerCase();
   const parts = base.split(/\-/);
-
   if (parts.length < 4) return null;
-
   const [id, diff, type, ...subtypeParts] = parts;
   const rawSubtype = subtypeParts.join('-');
   const subtype = rawSubtype.replace(/([a-z])([A-Z])/g, '$1 $2').toLowerCase();
-
   const difficulty = DIFFICULTY_ALIASES[diff];
   if (!difficulty) return null;
-
   return { difficulty, type, subtype, id };
-}
-
-function readFileAsDataUrl(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result as string);
-    reader.onerror = () => reject(reader.error);
-    reader.readAsDataURL(file);
-  });
 }
 
 export default function UploadQuestions() {
@@ -58,10 +44,7 @@ export default function UploadQuestions() {
   const [uploading, setUploading] = useState(false);
 
   const handleFolderSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || []).filter(f =>
-      f.type.startsWith('image/')
-    );
-
+    const files = Array.from(e.target.files || []).filter(f => f.type.startsWith('image/'));
     if (files.length === 0) {
       toast.error('No image files found in folder');
       return;
@@ -75,16 +58,11 @@ export default function UploadQuestions() {
         parsed.push({ file, difficulty: result.difficulty, type: result.type, subtype: result.subtype, label: file.name, preview });
       } else {
         parsed.push({
-          file,
-          difficulty: 'medium',
-          type: 'multiple-choice',
-          label: file.name,
-          preview,
-          error: 'Could not parse filename. Expected format: id-diff-type-subtype.png (e.g., 001-c-algebra-polynomial.png)',
+          file, difficulty: 'medium', type: 'multiple-choice', label: file.name, preview,
+          error: 'Could not parse filename. Expected format: id-diff-type-subtype.png',
         });
       }
     }
-
     setParsedFiles(parsed);
   };
 
@@ -99,9 +77,8 @@ export default function UploadQuestions() {
     try {
       for (const pf of valid) {
         const id = crypto.randomUUID();
-        const dataUrl = await readFileAsDataUrl(pf.file);
-        await saveImage(id, dataUrl);
-        saveQuestion({
+        const imageUrl = await uploadQuestionImage(id, pf.file);
+        await saveQuestion({
           id,
           text: pf.file.name,
           type: pf.type,
@@ -110,12 +87,13 @@ export default function UploadQuestions() {
           correctAnswer: '',
           createdAt: new Date().toISOString(),
           hasImage: true,
+          imageUrl,
         });
       }
       toast.success(`Uploaded ${valid.length} question${valid.length !== 1 ? 's' : ''}!`);
       navigate('/');
-    } catch (err) {
-      toast.error('Upload failed');
+    } catch (err: any) {
+      toast.error(err?.message || 'Upload failed');
       console.error(err);
     } finally {
       setUploading(false);
@@ -144,7 +122,7 @@ export default function UploadQuestions() {
             <input
               ref={inputRef}
               type="file"
-              // @ts-ignore - webkitdirectory is not in TS types
+              // @ts-ignore
               webkitdirectory=""
               multiple
               className="hidden"
@@ -155,8 +133,7 @@ export default function UploadQuestions() {
               className="w-full gap-2 h-20 border-dashed text-muted-foreground"
               onClick={() => inputRef.current?.click()}
             >
-              <FolderOpen className="h-5 w-5" />
-              Select Folder
+              <FolderOpen className="h-5 w-5" /> Select Folder
             </Button>
           </div>
         </Card>
@@ -192,7 +169,7 @@ export default function UploadQuestions() {
                     ) : (
                       <div className="flex items-center gap-2 mt-0.5">
                         <Badge variant="outline" className="text-[10px] px-1.5">{DIFFICULTY_LABELS[pf.difficulty]}</Badge>
-                        <Badge variant="outline" className="text-[10px] px-1.5">{QUESTION_TYPE_LABELS[pf.type]}</Badge>
+                        <Badge variant="outline" className="text-[10px] px-1.5">{pf.type}</Badge>
                         <Check className="h-3 w-3 text-easy" />
                       </div>
                     )}

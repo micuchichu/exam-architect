@@ -20,7 +20,7 @@ export default function AddQuestion() {
   const [correctAnswer, setCorrectAnswer] = useState('');
   const [options, setOptions] = useState(['', '', '', '']);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!text.trim() || !correctAnswer.trim()) {
       toast.error('Fill in the question and correct answer');
@@ -31,34 +31,35 @@ export default function AddQuestion() {
       return;
     }
 
-    saveQuestion({
-      id: crypto.randomUUID(),
-      text: text.trim(),
-      type,
-      difficulty,
-      correctAnswer: correctAnswer.trim(),
-      options: type === 'multiple-choice' ? options.filter(o => o.trim()) : undefined,
-      createdAt: new Date().toISOString(),
-    });
-
-    toast.success('Question added!');
-    setText('');
-    setCorrectAnswer('');
-    setOptions(['', '', '', '']);
+    try {
+      await saveQuestion({
+        id: crypto.randomUUID(),
+        text: text.trim(),
+        type,
+        difficulty,
+        correctAnswer: correctAnswer.trim(),
+        options: type === 'multiple-choice' ? options.filter(o => o.trim()) : undefined,
+        createdAt: new Date().toISOString(),
+      });
+      toast.success('Question added!');
+      setText('');
+      setCorrectAnswer('');
+      setOptions(['', '', '', '']);
+    } catch (err: any) {
+      toast.error(err?.message || 'Failed to save question');
+    }
   };
 
   return (
     <Layout>
       <div className="mx-auto max-w-2xl">
         <h1 className="text-3xl font-bold tracking-tight mb-8">Add Question</h1>
-
         <Card className="p-6">
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-2">
               <Label htmlFor="question">Question</Label>
               <Textarea id="question" value={text} onChange={e => setText(e.target.value)} placeholder="Enter your question..." rows={3} />
             </div>
-
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Type</Label>
@@ -83,36 +84,22 @@ export default function AddQuestion() {
                 </Select>
               </div>
             </div>
-
             {type === 'multiple-choice' && (
               <div className="space-y-3">
                 <Label>Options</Label>
                 {options.map((opt, i) => (
                   <div key={i} className="flex gap-2">
-                    <Input
-                      value={opt}
-                      onChange={e => {
-                        const next = [...options];
-                        next[i] = e.target.value;
-                        setOptions(next);
-                      }}
-                      placeholder={`Option ${i + 1}`}
-                    />
+                    <Input value={opt} onChange={e => { const next = [...options]; next[i] = e.target.value; setOptions(next); }} placeholder={`Option ${i + 1}`} />
                     {options.length > 2 && (
-                      <Button type="button" variant="ghost" size="icon" onClick={() => setOptions(options.filter((_, j) => j !== i))}>
-                        <X className="h-4 w-4" />
-                      </Button>
+                      <Button type="button" variant="ghost" size="icon" onClick={() => setOptions(options.filter((_, j) => j !== i))}><X className="h-4 w-4" /></Button>
                     )}
                   </div>
                 ))}
                 {options.length < 6 && (
-                  <Button type="button" variant="outline" size="sm" onClick={() => setOptions([...options, ''])}>
-                    <PlusCircle className="mr-2 h-4 w-4" /> Add Option
-                  </Button>
+                  <Button type="button" variant="outline" size="sm" onClick={() => setOptions([...options, ''])}><PlusCircle className="mr-2 h-4 w-4" /> Add Option</Button>
                 )}
               </div>
             )}
-
             {type === 'true-false' && (
               <div className="space-y-2">
                 <Label>Correct Answer</Label>
@@ -125,14 +112,12 @@ export default function AddQuestion() {
                 </Select>
               </div>
             )}
-
             {type !== 'true-false' && (
               <div className="space-y-2">
                 <Label htmlFor="answer">Correct Answer</Label>
                 <Input id="answer" value={correctAnswer} onChange={e => setCorrectAnswer(e.target.value)} placeholder="Enter the correct answer..." />
               </div>
             )}
-
             <Button type="submit" className="w-full">Add Question</Button>
           </form>
         </Card>

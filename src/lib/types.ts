@@ -11,6 +11,7 @@ export interface Question {
   correctAnswer: string;
   createdAt: string;
   hasImage?: boolean;
+  imageUrl?: string;
 }
 
 export interface GeneratedExam {
