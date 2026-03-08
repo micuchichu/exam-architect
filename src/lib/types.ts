@@ -5,6 +5,7 @@ export interface Question {
   id: string;
   text: string;
   type: QuestionType;
+  subtype?: string;
   difficulty: Difficulty;
   options?: string[]; // for multiple-choice
   correctAnswer: string;
