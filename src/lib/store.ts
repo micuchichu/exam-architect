@@ -20,7 +20,7 @@ function reParseFromFilename(q: Question): Question {
     ...q,
     difficulty: difficulty || q.difficulty,
     type: type || q.type,
-    subtype: subtypeParts.join('-') || q.subtype,
+    subtype: (subtypeParts.join('-') || q.subtype || '').replace(/([a-z])([A-Z])/g, '$1 $2').toLowerCase(),
   };
 }
 
@@ -53,6 +53,10 @@ export function saveQuestion(question: Question): void {
 export function deleteQuestion(id: string): void {
   const questions = getQuestions().filter(q => q.id !== id);
   localStorage.setItem(QUESTIONS_KEY, JSON.stringify(questions));
+}
+
+export function deleteAllQuestions(): void {
+  localStorage.setItem(QUESTIONS_KEY, JSON.stringify([]));
 }
 
 export function getExams(): GeneratedExam[] {

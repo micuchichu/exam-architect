@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { getQuestions, deleteQuestion } from '@/lib/store';
+import { getQuestions, deleteQuestion, deleteAllQuestions } from '@/lib/store';
 import { Question, QUESTION_TYPE_LABELS, DIFFICULTY_LABELS, Difficulty } from '@/lib/types';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -93,6 +93,13 @@ export default function Index() {
     toast.success('Question deleted');
   };
 
+  const handleDeleteAll = () => {
+    if (!window.confirm(`Delete all ${questions.length} questions? This cannot be undone.`)) return;
+    deleteAllQuestions();
+    setQuestions([]);
+    toast.success('All questions deleted');
+  };
+
   const toggleSortDir = () => setSortDir(d => d === 'asc' ? 'desc' : 'asc');
 
   return (
@@ -106,6 +113,9 @@ export default function Index() {
 
       {questions.length > 0 && (
         <div className="mb-6 flex flex-wrap items-center gap-3">
+          <Button variant="destructive" size="sm" className="gap-2" onClick={handleDeleteAll}>
+            <Trash2 className="h-4 w-4" /> Delete All
+          </Button>
           <Select value={filterDifficulty} onValueChange={setFilterDifficulty}>
             <SelectTrigger className="w-[140px]">
               <SelectValue placeholder="Difficulty" />
