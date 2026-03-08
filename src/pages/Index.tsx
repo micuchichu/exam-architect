@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { getQuestions, deleteQuestion } from '@/lib/store';
-import { Question, QUESTION_TYPE_LABELS, DIFFICULTY_LABELS, Difficulty, QuestionType } from '@/lib/types';
+import { Question, QUESTION_TYPE_LABELS, DIFFICULTY_LABELS, Difficulty } from '@/lib/types';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
