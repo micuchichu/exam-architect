@@ -127,23 +127,17 @@ export default function UploadQuestions() {
       <div className="mx-auto max-w-3xl">
         <h1 className="text-3xl font-bold tracking-tight mb-2">Upload Questions</h1>
         <p className="text-muted-foreground mb-8">
-          Select a folder of question images. Name files like: <code className="rounded bg-secondary px-1.5 py-0.5 text-xs font-mono">hard_mc_01.png</code>
+          Select a folder of question images. Name files like: <code className="rounded bg-secondary px-1.5 py-0.5 text-xs font-mono">001-c-algebra-polynomial.png</code>
         </p>
 
         <Card className="p-6 mb-6">
           <div className="space-y-4">
             <div className="text-sm text-muted-foreground space-y-1">
               <p className="font-medium text-foreground">Filename format:</p>
-              <p><code className="rounded bg-secondary px-1 py-0.5 text-xs font-mono">{'{difficulty}_{type}_{number}.png'}</code></p>
-              <div className="grid grid-cols-2 gap-4 mt-3">
-                <div>
-                  <p className="font-medium text-foreground text-xs mb-1">Difficulty codes</p>
-                  <p className="text-xs">easy / e, medium / med / m, hard / h</p>
-                </div>
-                <div>
-                  <p className="font-medium text-foreground text-xs mb-1">Type codes</p>
-                  <p className="text-xs">mc, tf, sa, fb (or full names)</p>
-                </div>
+              <p><code className="rounded bg-secondary px-1 py-0.5 text-xs font-mono">{'{id}-{diff}-{type}-{subtype}.png'}</code></p>
+              <div className="mt-3">
+                <p className="font-medium text-foreground text-xs mb-1">Difficulty codes</p>
+                <p className="text-xs">a = Easy, b = Medium, c = Hard</p>
               </div>
             </div>
 
