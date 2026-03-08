@@ -1,11 +1,13 @@
 import { useState, useEffect, useMemo } from 'react';
 import { getQuestions, deleteQuestion, deleteAllQuestions } from '@/lib/store';
+import { getImage } from '@/lib/idb';
 import { Question, QUESTION_TYPE_LABELS, DIFFICULTY_LABELS, Difficulty } from '@/lib/types';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Trash2, ArrowUpDown } from 'lucide-react';
+import { Trash2, ArrowUpDown, Eye } from 'lucide-react';
 import { toast } from 'sonner';
 import Layout from '@/components/Layout';
 
