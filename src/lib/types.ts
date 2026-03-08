@@ -9,6 +9,7 @@ export interface Question {
   options?: string[]; // for multiple-choice
   correctAnswer: string;
   createdAt: string;
+  hasImage?: boolean;
 }
 
 export interface GeneratedExam {
