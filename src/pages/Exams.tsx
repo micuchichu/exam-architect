@@ -69,7 +69,7 @@ function ExamImageViewer({ exam }: { exam: GeneratedExam }) {
       i.src = examHeaderSrc;
     });
 
-    const canvasWidth = Math.max(...scaledDims.map(d => d.width), headerImg.width) + padding * 2;
+    const canvasWidth = Math.max(headerImg.width, ...scaledDims.map(d => d.width)) + padding * 2;
     const headerScale = (canvasWidth - padding * 2) / headerImg.width;
     const headerHeight = Math.round(headerImg.height * headerScale);
     const totalHeight = headerHeight + padding + scaledDims.reduce((sum, d) => sum + d.height + padding, padding);
