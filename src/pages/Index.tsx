@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { getQuestions, deleteQuestion } from '@/lib/store';
-import { Question, QUESTION_TYPE_LABELS, DIFFICULTY_LABELS, Difficulty, QuestionType } from '@/lib/types';
+import { Question, QUESTION_TYPE_LABELS, DIFFICULTY_LABELS, Difficulty } from '@/lib/types';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -46,9 +46,9 @@ export default function Index() {
   }, [questions]);
 
   const types = useMemo(() => {
-    const set = new Set<QuestionType>();
+    const set = new Set<string>();
     questions.forEach(q => set.add(q.type));
-    return Array.from(set);
+    return Array.from(set).sort();
   }, [questions]);
 
   const filtered = useMemo(() => {
@@ -125,7 +125,7 @@ export default function Index() {
             <SelectContent>
               <SelectItem value="all">All types</SelectItem>
               {types.map(t => (
-                <SelectItem key={t} value={t}>{QUESTION_TYPE_LABELS[t]}</SelectItem>
+                <SelectItem key={t} value={t}>{QUESTION_TYPE_LABELS[t as keyof typeof QUESTION_TYPE_LABELS] || t}</SelectItem>
               ))}
             </SelectContent>
           </Select>
@@ -184,7 +184,7 @@ export default function Index() {
                 <p className="font-medium leading-snug">{q.text}</p>
                 <div className="mt-2 flex flex-wrap gap-2">
                   <DifficultyBadge difficulty={q.difficulty} />
-                  <Badge variant="outline" className="text-xs">{QUESTION_TYPE_LABELS[q.type]}</Badge>
+                  <Badge variant="outline" className="text-xs">{QUESTION_TYPE_LABELS[q.type as keyof typeof QUESTION_TYPE_LABELS] || q.type}</Badge>
                   {q.subtype && <Badge variant="secondary" className="text-xs">{q.subtype}</Badge>}
                 </div>
               </div>

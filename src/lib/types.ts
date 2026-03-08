@@ -4,7 +4,7 @@ export type Difficulty = 'easy' | 'medium' | 'hard';
 export interface Question {
   id: string;
   text: string;
-  type: QuestionType;
+  type: string;
   subtype?: string;
   difficulty: Difficulty;
   options?: string[]; // for multiple-choice
