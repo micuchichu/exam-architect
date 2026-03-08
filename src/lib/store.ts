@@ -18,6 +18,12 @@ export async function saveQuestion(question: Question): Promise<void> {
   await setData(QUESTIONS_KEY, questions);
 }
 
+export async function saveQuestionsBulk(newQuestions: Question[]): Promise<void> {
+  const questions = await getQuestions();
+  questions.push(...newQuestions);
+  await setData(QUESTIONS_KEY, questions);
+}
+
 export async function deleteQuestion(id: string): Promise<void> {
   const questions = await getQuestions();
   await setData(QUESTIONS_KEY, questions.filter(q => q.id !== id));
