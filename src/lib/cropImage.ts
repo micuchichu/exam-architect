@@ -3,6 +3,7 @@ export interface CropResult {
   originalWidth: number;
   croppedWidth: number;
   croppedHeight: number;
+  avgRunLength: number; // average horizontal black pixel run length (text size indicator)
 }
 
 /**
@@ -23,23 +24,39 @@ export function cropImageToContent(dataUrl: string, threshold = 180, padding = 1
       const { data, width, height } = imageData;
 
       let minY = height, maxY = 0, minX = width, maxX = 0;
+      let totalRunLength = 0;
+      let runCount = 0;
 
       for (let y = 0; y < height; y++) {
+        let inRun = false;
+        let currentRun = 0;
         for (let x = 0; x < width; x++) {
           const i = (y * width + x) * 4;
           const r = data[i], g = data[i + 1], b = data[i + 2];
-          if (r < threshold && g < threshold && b < threshold) {
+          const isDark = r < threshold && g < threshold && b < threshold;
+          if (isDark) {
             if (y < minY) minY = y;
             if (y > maxY) maxY = y;
             if (x < minX) minX = x;
             if (x > maxX) maxX = x;
+            if (!inRun) { inRun = true; currentRun = 0; }
+            currentRun++;
+          } else {
+            if (inRun) {
+              totalRunLength += currentRun;
+              runCount++;
+              inRun = false;
+            }
           }
         }
+        if (inRun) { totalRunLength += currentRun; runCount++; }
       }
+
+      const avgRunLength = runCount > 0 ? totalRunLength / runCount : 0;
 
       // No dark pixels found — return original
       if (minY >= maxY || minX >= maxX) {
-        resolve({ dataUrl, originalWidth: img.width, croppedWidth: img.width, croppedHeight: img.height });
+        resolve({ dataUrl, originalWidth: img.width, croppedWidth: img.width, croppedHeight: img.height, avgRunLength });
         return;
       }
 
@@ -64,6 +81,7 @@ export function cropImageToContent(dataUrl: string, threshold = 180, padding = 1
         originalWidth: img.width,
         croppedWidth: cropW,
         croppedHeight: cropH,
+        avgRunLength,
       });
     };
     img.onerror = reject;
