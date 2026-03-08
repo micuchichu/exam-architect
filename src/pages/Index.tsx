@@ -93,6 +93,13 @@ export default function Index() {
     toast.success('Question deleted');
   };
 
+  const handleDeleteAll = () => {
+    if (!window.confirm(`Delete all ${questions.length} questions? This cannot be undone.`)) return;
+    deleteAllQuestions();
+    setQuestions([]);
+    toast.success('All questions deleted');
+  };
+
   const toggleSortDir = () => setSortDir(d => d === 'asc' ? 'desc' : 'asc');
 
   return (
