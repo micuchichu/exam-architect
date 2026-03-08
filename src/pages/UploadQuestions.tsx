@@ -73,7 +73,7 @@ export default function UploadQuestions() {
       const result = parseFilename(file.name);
       const preview = URL.createObjectURL(file);
       if (result) {
-        parsed.push({ file, ...result, label: file.name, preview });
+        parsed.push({ file, difficulty: result.difficulty, type: result.type, label: file.name, preview });
       } else {
         parsed.push({
           file,
@@ -81,7 +81,7 @@ export default function UploadQuestions() {
           type: 'multiple-choice',
           label: file.name,
           preview,
-          error: 'Could not parse filename. Expected format: difficulty_type_number.png (e.g., hard_mc_01.png)',
+          error: 'Could not parse filename. Expected format: id-diff-type-subtype.png (e.g., 001-c-algebra-polynomial.png)',
         });
       }
     }
