@@ -106,6 +106,7 @@ export default function UploadQuestions() {
           id,
           text: pf.file.name,
           type: pf.type,
+          subtype: pf.subtype,
           difficulty: pf.difficulty,
           correctAnswer: '',
           createdAt: new Date().toISOString(),
