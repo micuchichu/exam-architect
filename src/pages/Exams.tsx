@@ -30,7 +30,13 @@ function ExamImageViewer({ exam }: { exam: GeneratedExam }) {
 
   useEffect(() => {
     if (imageQuestionIds.length > 0) {
-      getImages(imageQuestionIds).then(setImageUrls);
+      getImages(imageQuestionIds).then(async (urls) => {
+        const cropped = new Map<string, string>();
+        for (const [id, dataUrl] of urls) {
+          cropped.set(id, await cropImageToContent(dataUrl));
+        }
+        setImageUrls(cropped);
+      });
     }
   }, [exam.id]);
 
