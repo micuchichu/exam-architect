@@ -75,13 +75,13 @@ export default function UploadQuestions() {
 
     setUploading(true);
     try {
-      const BATCH_SIZE = 5;
+      const BATCH_SIZE = 10;
       for (let i = 0; i < valid.length; i += BATCH_SIZE) {
         const batch = valid.slice(i, i + BATCH_SIZE);
-        await Promise.all(batch.map(async (pf) => {
+        const questions = await Promise.all(batch.map(async (pf) => {
           const id = crypto.randomUUID();
           const imageUrl = await uploadQuestionImage(id, pf.file);
-          await saveQuestion({
+          return {
             id,
             text: pf.file.name,
             type: pf.type,
@@ -91,8 +91,9 @@ export default function UploadQuestions() {
             createdAt: new Date().toISOString(),
             hasImage: true,
             imageUrl,
-          });
+          };
         }));
+        await saveQuestionsBulk(questions);
       }
       toast.success(`Uploaded ${valid.length} question${valid.length !== 1 ? 's' : ''}!`);
       navigate('/');
