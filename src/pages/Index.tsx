@@ -46,9 +46,9 @@ export default function Index() {
   }, [questions]);
 
   const types = useMemo(() => {
-    const set = new Set<QuestionType>();
+    const set = new Set<string>();
     questions.forEach(q => set.add(q.type));
-    return Array.from(set);
+    return Array.from(set).sort();
   }, [questions]);
 
   const filtered = useMemo(() => {
