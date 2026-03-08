@@ -48,22 +48,31 @@ function ExamImageViewer({ exam }: { exam: GeneratedExam }) {
 
     if (loadedImages.length === 0) return null;
 
-    const maxWidth = Math.max(...loadedImages.map(i => i.width));
+    // Normalize all images to the same width
+    const targetWidth = Math.max(...loadedImages.map(i => i.width));
     const padding = 20;
-    const totalHeight = loadedImages.reduce((sum, img) => sum + img.height + padding, padding);
+
+    // Calculate scaled heights
+    const scaledDims = loadedImages.map(img => {
+      const scale = targetWidth / img.width;
+      return { width: targetWidth, height: Math.round(img.height * scale) };
+    });
+
+    const totalHeight = scaledDims.reduce((sum, d) => sum + d.height + padding, padding);
 
     const canvas = document.createElement('canvas');
-    canvas.width = maxWidth + padding * 2;
+    canvas.width = targetWidth + padding * 2;
     canvas.height = totalHeight;
     const ctx = canvas.getContext('2d')!;
     ctx.fillStyle = '#ffffff';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     let y = padding;
-    for (const img of loadedImages) {
-      const x = Math.floor((maxWidth - img.width) / 2) + padding;
-      ctx.drawImage(img, x, y);
-      y += img.height + padding;
+    for (let idx = 0; idx < loadedImages.length; idx++) {
+      const img = loadedImages[idx];
+      const dims = scaledDims[idx];
+      ctx.drawImage(img, padding, y, dims.width, dims.height);
+      y += dims.height + padding;
     }
 
     return canvas.toDataURL('image/png');
