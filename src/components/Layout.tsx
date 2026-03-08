@@ -1,10 +1,11 @@
 import { Link, useLocation } from 'react-router-dom';
-import { BookOpen, PlusCircle, FileText } from 'lucide-react';
+import { BookOpen, PlusCircle, FileText, FolderUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const navItems = [
   { to: '/', label: 'Question Bank', icon: BookOpen },
   { to: '/add', label: 'Add Question', icon: PlusCircle },
+  { to: '/upload', label: 'Upload Folder', icon: FolderUp },
   { to: '/exams', label: 'Exams', icon: FileText },
 ];
 
