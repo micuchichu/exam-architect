@@ -49,14 +49,15 @@ function ExamImageViewer({ exam }: { exam: GeneratedExam }) {
 
     if (cropResults.length === 0) return null;
 
-    // Normalize text size: scale each image so its avgRunLength matches the median
+    // Normalize text size using avgRunLength, then shrink to ~65% for a compact left-aligned layout
     const runs = cropResults.map(r => r.avgRunLength).filter(r => r > 0);
     const sortedRuns = [...runs].sort((a, b) => a - b);
     const targetRun = sortedRuns[Math.floor(sortedRuns.length / 2)] || 1;
     const padding = 20;
+    const shrinkFactor = 0.65;
 
     const scaledDims = cropResults.map(({ img, avgRunLength }) => {
-      const scale = avgRunLength > 0 ? targetRun / avgRunLength : 1;
+      const scale = (avgRunLength > 0 ? targetRun / avgRunLength : 1) * shrinkFactor;
       return { width: Math.round(img.width * scale), height: Math.round(img.height * scale) };
     });
 
