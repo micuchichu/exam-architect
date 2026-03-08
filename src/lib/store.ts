@@ -13,8 +13,8 @@ function reParseFromFilename(q: Question): Question {
   if (!q.hasImage || !q.text) return q;
   const base = q.text.replace(/\.\w+$/, '').toLowerCase();
   const parts = base.split('-');
-  if (parts.length < 5) return q;
-  const [, , diff, type, ...subtypeParts] = parts;
+  if (parts.length < 4) return q;
+  const [, diff, type, ...subtypeParts] = parts;
   const difficulty = DIFFICULTY_ALIASES[diff];
   return {
     ...q,

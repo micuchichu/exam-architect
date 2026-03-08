@@ -27,16 +27,13 @@ const DIFFICULTY_ALIASES: Record<string, Difficulty> = {
 };
 
 function parseFilename(name: string): { difficulty: Difficulty; type: string; subtype: string; id: string } | null {
-  // Remove extension
   const base = name.replace(/\.\w+$/, '').toLowerCase();
-  // Format: id-x-diff-type-subtype (e.g. 760-x-c-analiza-derivabilitate.png)
   const parts = base.split(/\-/);
 
-  if (parts.length < 5) return null;
+  if (parts.length < 4) return null;
 
-  const [id, _x, diff, type, ...subtypeParts] = parts;
+  const [id, diff, type, ...subtypeParts] = parts;
   const rawSubtype = subtypeParts.join('-');
-  // Split camelCase into spaced words (e.g. "apTrigGeo" -> "ap trig geo")
   const subtype = rawSubtype.replace(/([a-z])([A-Z])/g, '$1 $2').toLowerCase();
 
   const difficulty = DIFFICULTY_ALIASES[diff];
