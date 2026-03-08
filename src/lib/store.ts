@@ -55,6 +55,10 @@ export function deleteQuestion(id: string): void {
   localStorage.setItem(QUESTIONS_KEY, JSON.stringify(questions));
 }
 
+export function deleteAllQuestions(): void {
+  localStorage.setItem(QUESTIONS_KEY, JSON.stringify([]));
+}
+
 export function getExams(): GeneratedExam[] {
   const raw = localStorage.getItem(EXAMS_KEY);
   return raw ? JSON.parse(raw) : [];

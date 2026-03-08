@@ -113,6 +113,9 @@ export default function Index() {
 
       {questions.length > 0 && (
         <div className="mb-6 flex flex-wrap items-center gap-3">
+          <Button variant="destructive" size="sm" className="gap-2" onClick={handleDeleteAll}>
+            <Trash2 className="h-4 w-4" /> Delete All
+          </Button>
           <Select value={filterDifficulty} onValueChange={setFilterDifficulty}>
             <SelectTrigger className="w-[140px]">
               <SelectValue placeholder="Difficulty" />
