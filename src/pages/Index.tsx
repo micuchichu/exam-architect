@@ -184,7 +184,7 @@ export default function Index() {
                 <p className="font-medium leading-snug">{q.text}</p>
                 <div className="mt-2 flex flex-wrap gap-2">
                   <DifficultyBadge difficulty={q.difficulty} />
-                  <Badge variant="outline" className="text-xs">{QUESTION_TYPE_LABELS[q.type]}</Badge>
+                  <Badge variant="outline" className="text-xs">{QUESTION_TYPE_LABELS[q.type as keyof typeof QUESTION_TYPE_LABELS] || q.type}</Badge>
                   {q.subtype && <Badge variant="secondary" className="text-xs">{q.subtype}</Badge>}
                 </div>
               </div>
