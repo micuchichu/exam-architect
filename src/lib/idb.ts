@@ -1,6 +1,7 @@
 const DB_NAME = 'exam-generator-db';
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 const IMAGES_STORE = 'question-images';
+const DATA_STORE = 'app-data';
 
 function openDB(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
@@ -10,11 +11,48 @@ function openDB(): Promise<IDBDatabase> {
       if (!db.objectStoreNames.contains(IMAGES_STORE)) {
         db.createObjectStore(IMAGES_STORE);
       }
+      if (!db.objectStoreNames.contains(DATA_STORE)) {
+        db.createObjectStore(DATA_STORE);
+      }
     };
     req.onsuccess = () => resolve(req.result);
     req.onerror = () => reject(req.error);
   });
 }
+
+// ── Generic data store ──
+
+export async function getData<T>(key: string): Promise<T | undefined> {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(DATA_STORE, 'readonly');
+    const req = tx.objectStore(DATA_STORE).get(key);
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+export async function setData<T>(key: string, value: T): Promise<void> {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(DATA_STORE, 'readwrite');
+    tx.objectStore(DATA_STORE).put(value, key);
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}
+
+export async function removeData(key: string): Promise<void> {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(DATA_STORE, 'readwrite');
+    tx.objectStore(DATA_STORE).delete(key);
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}
+
+// ── Images ──
 
 export async function saveImage(id: string, dataUrl: string): Promise<void> {
   const db = await openDB();

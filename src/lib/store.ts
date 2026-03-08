@@ -1,5 +1,5 @@
 import { Question, Difficulty, GeneratedExam } from './types';
-import { saveImage, getImage, deleteImage } from './idb';
+import { saveImage, getImage, deleteImage, getData, setData, removeData } from './idb';
 
 const QUESTIONS_KEY = 'exam-generator-questions';
 const EXAMS_KEY = 'exam-generator-exams';
@@ -7,25 +7,20 @@ const EXAMS_KEY = 'exam-generator-exams';
 // ── Questions ──
 
 export async function getQuestions(): Promise<Question[]> {
-  const raw = localStorage.getItem(QUESTIONS_KEY);
-  if (!raw) return [];
-  try {
-    const questions: Question[] = JSON.parse(raw);
-    return questions.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
-  } catch {
-    return [];
-  }
+  const questions = await getData<Question[]>(QUESTIONS_KEY);
+  if (!questions) return [];
+  return questions.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 }
 
 export async function saveQuestion(question: Question): Promise<void> {
   const questions = await getQuestions();
   questions.push(question);
-  localStorage.setItem(QUESTIONS_KEY, JSON.stringify(questions));
+  await setData(QUESTIONS_KEY, questions);
 }
 
 export async function deleteQuestion(id: string): Promise<void> {
   const questions = await getQuestions();
-  localStorage.setItem(QUESTIONS_KEY, JSON.stringify(questions.filter(q => q.id !== id)));
+  await setData(QUESTIONS_KEY, questions.filter(q => q.id !== id));
   await deleteImage(id);
 }
 
@@ -34,7 +29,7 @@ export async function deleteAllQuestions(): Promise<void> {
   for (const q of questions) {
     if (q.hasImage) await deleteImage(q.id);
   }
-  localStorage.removeItem(QUESTIONS_KEY);
+  await removeData(QUESTIONS_KEY);
 }
 
 // ── Image Upload ──
@@ -60,23 +55,18 @@ export async function uploadQuestionImageFromDataUrl(questionId: string, dataUrl
 // ── Exams ──
 
 export async function getExams(): Promise<GeneratedExam[]> {
-  const raw = localStorage.getItem(EXAMS_KEY);
-  if (!raw) return [];
-  try {
-    const exams: GeneratedExam[] = JSON.parse(raw);
-    return exams.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
-  } catch {
-    return [];
-  }
+  const exams = await getData<GeneratedExam[]>(EXAMS_KEY);
+  if (!exams) return [];
+  return exams.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 }
 
 export async function saveExam(exam: GeneratedExam): Promise<void> {
   const exams = await getExams();
   exams.push(exam);
-  localStorage.setItem(EXAMS_KEY, JSON.stringify(exams));
+  await setData(EXAMS_KEY, exams);
 }
 
 export async function deleteExam(id: string): Promise<void> {
   const exams = await getExams();
-  localStorage.setItem(EXAMS_KEY, JSON.stringify(exams.filter(e => e.id !== id)));
+  await setData(EXAMS_KEY, exams.filter(e => e.id !== id));
 }
