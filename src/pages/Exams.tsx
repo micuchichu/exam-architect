@@ -75,6 +75,16 @@ function ExamImageViewer({ exam }: { exam: GeneratedExam }) {
       const dims = scaledDims[idx];
       ctx.drawImage(img, padding, y, dims.width, dims.height);
       y += dims.height + padding;
+
+      // Draw separator line between questions
+      if (idx < cropResults.length - 1) {
+        ctx.strokeStyle = '#000000';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(padding, y - padding / 2);
+        ctx.lineTo(canvas.width - padding, y - padding / 2);
+        ctx.stroke();
+      }
     }
 
     return canvas.toDataURL('image/png');
