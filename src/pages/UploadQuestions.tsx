@@ -19,63 +19,28 @@ interface ParsedFile {
   error?: string;
 }
 
-const TYPE_ALIASES: Record<string, QuestionType> = {
-  'multiple-choice': 'multiple-choice',
-  'mc': 'multiple-choice',
-  'multiplechoice': 'multiple-choice',
-  'true-false': 'true-false',
-  'tf': 'true-false',
-  'truefalse': 'true-false',
-  'short-answer': 'short-answer',
-  'sa': 'short-answer',
-  'shortanswer': 'short-answer',
-  'fill-blank': 'fill-blank',
-  'fb': 'fill-blank',
-  'fillblank': 'fill-blank',
-  'fill': 'fill-blank',
-};
-
 const DIFFICULTY_ALIASES: Record<string, Difficulty> = {
-  easy: 'easy',
-  e: 'easy',
-  medium: 'medium',
-  med: 'medium',
-  m: 'medium',
-  hard: 'hard',
-  h: 'hard',
+  a: 'easy',
+  b: 'medium',
+  c: 'hard',
 };
 
-function parseFilename(name: string): { difficulty: Difficulty; type: QuestionType } | null {
+function parseFilename(name: string): { difficulty: Difficulty; type: QuestionType; id: string; subtype: string } | null {
   // Remove extension
   const base = name.replace(/\.\w+$/, '').toLowerCase();
-  // Split by _ or -
-  const parts = base.split(/[_\-]+/);
+  // Format: id-diff-type-subtype
+  const parts = base.split(/\-/);
 
-  let difficulty: Difficulty | null = null;
-  let type: QuestionType | null = null;
+  if (parts.length < 4) return null;
 
-  for (const part of parts) {
-    if (!difficulty && DIFFICULTY_ALIASES[part]) {
-      difficulty = DIFFICULTY_ALIASES[part];
-    }
-    if (!type && TYPE_ALIASES[part]) {
-      type = TYPE_ALIASES[part];
-    }
-  }
+  const [id, diff, type, ...subtypeParts] = parts;
+  const subtype = subtypeParts.join('-');
 
-  // Try combining adjacent parts for multi-word types like "multiple-choice"
-  if (!type) {
-    for (let i = 0; i < parts.length - 1; i++) {
-      const combined = parts[i] + '-' + parts[i + 1];
-      if (TYPE_ALIASES[combined]) {
-        type = TYPE_ALIASES[combined];
-        break;
-      }
-    }
-  }
+  const difficulty = DIFFICULTY_ALIASES[diff];
+  if (!difficulty) return null;
 
-  if (!difficulty || !type) return null;
-  return { difficulty, type };
+  // Accept any type/subtype — store as metadata
+  return { difficulty, type: 'multiple-choice' as QuestionType, id, subtype: `${type}-${subtype}` };
 }
 
 function readFileAsDataUrl(file: File): Promise<string> {
