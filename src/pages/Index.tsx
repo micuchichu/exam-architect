@@ -1,6 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
 import { getQuestions, deleteQuestion, deleteAllQuestions } from '@/lib/store';
-import { getImage } from '@/lib/idb';
 import { Question, QUESTION_TYPE_LABELS, DIFFICULTY_LABELS, Difficulty } from '@/lib/types';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -10,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Trash2, ArrowUpDown, Eye } from 'lucide-react';
 import { toast } from 'sonner';
 import Layout from '@/components/Layout';
+import { useAuth } from '@/hooks/useAuth';
 
 function DifficultyBadge({ difficulty }: { difficulty: Question['difficulty'] }) {
   const colors = {
@@ -30,6 +30,7 @@ type SortDir = 'asc' | 'desc';
 const DIFFICULTY_ORDER: Record<Difficulty, number> = { easy: 0, medium: 1, hard: 2 };
 
 export default function Index() {
+  const { isAdmin } = useAuth();
   const [questions, setQuestions] = useState<Question[]>([]);
   const [filterDifficulty, setFilterDifficulty] = useState<string>('all');
   const [filterType, setFilterType] = useState<string>('all');
@@ -38,7 +39,7 @@ export default function Index() {
   const [sortDir, setSortDir] = useState<SortDir>('desc');
 
   useEffect(() => {
-    setQuestions(getQuestions());
+    getQuestions().then(setQuestions);
   }, []);
 
   const subtypes = useMemo(() => {
@@ -55,63 +56,38 @@ export default function Index() {
 
   const filtered = useMemo(() => {
     let result = [...questions];
-
-    if (filterDifficulty !== 'all') {
-      result = result.filter(q => q.difficulty === filterDifficulty);
-    }
-    if (filterType !== 'all') {
-      result = result.filter(q => q.type === filterType);
-    }
-    if (filterSubtype !== 'all') {
-      result = result.filter(q => q.subtype === filterSubtype);
-    }
+    if (filterDifficulty !== 'all') result = result.filter(q => q.difficulty === filterDifficulty);
+    if (filterType !== 'all') result = result.filter(q => q.type === filterType);
+    if (filterSubtype !== 'all') result = result.filter(q => q.subtype === filterSubtype);
 
     result.sort((a, b) => {
       let cmp = 0;
       switch (sortField) {
-        case 'difficulty':
-          cmp = DIFFICULTY_ORDER[a.difficulty] - DIFFICULTY_ORDER[b.difficulty];
-          break;
-        case 'type':
-          cmp = a.type.localeCompare(b.type);
-          break;
-        case 'subtype':
-          cmp = (a.subtype || '').localeCompare(b.subtype || '');
-          break;
-        case 'date':
-        default:
-          cmp = a.createdAt.localeCompare(b.createdAt);
-          break;
+        case 'difficulty': cmp = DIFFICULTY_ORDER[a.difficulty] - DIFFICULTY_ORDER[b.difficulty]; break;
+        case 'type': cmp = a.type.localeCompare(b.type); break;
+        case 'subtype': cmp = (a.subtype || '').localeCompare(b.subtype || ''); break;
+        case 'date': default: cmp = a.createdAt.localeCompare(b.createdAt); break;
       }
       return sortDir === 'asc' ? cmp : -cmp;
     });
-
     return result;
   }, [questions, filterDifficulty, filterType, filterSubtype, sortField, sortDir]);
 
-  const handleDelete = (id: string) => {
-    deleteQuestion(id);
-    setQuestions(getQuestions());
+  const handleDelete = async (id: string) => {
+    await deleteQuestion(id);
+    const updated = await getQuestions();
+    setQuestions(updated);
     toast.success('Question deleted');
   };
 
-  const handleDeleteAll = () => {
+  const handleDeleteAll = async () => {
     if (!window.confirm(`Delete all ${questions.length} questions? This cannot be undone.`)) return;
-    deleteAllQuestions();
+    await deleteAllQuestions();
     setQuestions([]);
     toast.success('All questions deleted');
   };
 
   const [previewQuestion, setPreviewQuestion] = useState<Question | null>(null);
-  const [previewImage, setPreviewImage] = useState<string | null>(null);
-
-  const handlePreview = async (q: Question) => {
-    setPreviewQuestion(q);
-    if (q.hasImage) {
-      const img = await getImage(q.id);
-      setPreviewImage(img || null);
-    }
-  };
 
   const toggleSortDir = () => setSortDir(d => d === 'asc' ? 'desc' : 'asc');
 
@@ -126,13 +102,13 @@ export default function Index() {
 
       {questions.length > 0 && (
         <div className="mb-6 flex flex-wrap items-center gap-3">
-          <Button variant="destructive" size="sm" className="gap-2" onClick={handleDeleteAll}>
-            <Trash2 className="h-4 w-4" /> Delete All
-          </Button>
+          {isAdmin && (
+            <Button variant="destructive" size="sm" className="gap-2" onClick={handleDeleteAll}>
+              <Trash2 className="h-4 w-4" /> Delete All
+            </Button>
+          )}
           <Select value={filterDifficulty} onValueChange={setFilterDifficulty}>
-            <SelectTrigger className="w-[140px]">
-              <SelectValue placeholder="Difficulty" />
-            </SelectTrigger>
+            <SelectTrigger className="w-[140px]"><SelectValue placeholder="Difficulty" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All difficulties</SelectItem>
               <SelectItem value="easy">Easy</SelectItem>
@@ -142,9 +118,7 @@ export default function Index() {
           </Select>
 
           <Select value={filterType} onValueChange={setFilterType}>
-            <SelectTrigger className="w-[160px]">
-              <SelectValue placeholder="Type" />
-            </SelectTrigger>
+            <SelectTrigger className="w-[160px]"><SelectValue placeholder="Type" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All types</SelectItem>
               {types.map(t => (
@@ -155,23 +129,17 @@ export default function Index() {
 
           {subtypes.length > 0 && (
             <Select value={filterSubtype} onValueChange={setFilterSubtype}>
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Subtype" />
-              </SelectTrigger>
+              <SelectTrigger className="w-[180px]"><SelectValue placeholder="Subtype" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All subtypes</SelectItem>
-                {subtypes.map(s => (
-                  <SelectItem key={s} value={s}>{s}</SelectItem>
-                ))}
+                {subtypes.map(s => (<SelectItem key={s} value={s}>{s}</SelectItem>))}
               </SelectContent>
             </Select>
           )}
 
           <div className="flex items-center gap-2 ml-auto">
             <Select value={sortField} onValueChange={(v) => setSortField(v as SortField)}>
-              <SelectTrigger className="w-[140px]">
-                <SelectValue placeholder="Sort by" />
-              </SelectTrigger>
+              <SelectTrigger className="w-[140px]"><SelectValue placeholder="Sort by" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="date">Date added</SelectItem>
                 <SelectItem value="difficulty">Difficulty</SelectItem>
@@ -213,20 +181,22 @@ export default function Index() {
               </div>
               <div className="flex shrink-0 gap-1">
                 {q.hasImage && (
-                  <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-primary" onClick={() => handlePreview(q)}>
+                  <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-primary" onClick={() => setPreviewQuestion(q)}>
                     <Eye className="h-4 w-4" />
                   </Button>
                 )}
-                <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-destructive" onClick={() => handleDelete(q.id)}>
-                  <Trash2 className="h-4 w-4" />
-                </Button>
+                {isAdmin && (
+                  <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-destructive" onClick={() => handleDelete(q.id)}>
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                )}
               </div>
             </Card>
           ))}
         </div>
       )}
 
-      <Dialog open={!!previewQuestion} onOpenChange={(open) => { if (!open) { setPreviewQuestion(null); setPreviewImage(null); } }}>
+      <Dialog open={!!previewQuestion} onOpenChange={(open) => { if (!open) setPreviewQuestion(null); }}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>{previewQuestion?.text}</DialogTitle>
@@ -238,8 +208,8 @@ export default function Index() {
                 <Badge variant="outline" className="text-xs">{QUESTION_TYPE_LABELS[previewQuestion.type as keyof typeof QUESTION_TYPE_LABELS] || previewQuestion.type}</Badge>
                 {previewQuestion.subtype && <Badge variant="secondary" className="text-xs">{previewQuestion.subtype}</Badge>}
               </div>
-              {previewImage && (
-                <img src={previewImage} alt="Question" className="w-full rounded-md" />
+              {previewQuestion.imageUrl && (
+                <img src={previewQuestion.imageUrl} alt="Question" className="w-full rounded-md" />
               )}
             </div>
           )}
