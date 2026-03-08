@@ -125,7 +125,7 @@ export default function Index() {
             <SelectContent>
               <SelectItem value="all">All types</SelectItem>
               {types.map(t => (
-                <SelectItem key={t} value={t}>{QUESTION_TYPE_LABELS[t]}</SelectItem>
+                <SelectItem key={t} value={t}>{QUESTION_TYPE_LABELS[t as keyof typeof QUESTION_TYPE_LABELS] || t}</SelectItem>
               ))}
             </SelectContent>
           </Select>
