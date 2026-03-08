@@ -28,19 +28,18 @@ const DIFFICULTY_ALIASES: Record<string, Difficulty> = {
 function parseFilename(name: string): { difficulty: Difficulty; type: QuestionType; id: string; subtype: string } | null {
   // Remove extension
   const base = name.replace(/\.\w+$/, '').toLowerCase();
-  // Format: id-diff-type-subtype
+  // Format: id-x-diff-type-subtype
   const parts = base.split(/\-/);
 
-  if (parts.length < 4) return null;
+  if (parts.length < 5) return null;
 
-  const [id, diff, type, ...subtypeParts] = parts;
+  const [id, _x, diff, type, ...subtypeParts] = parts;
   const subtype = subtypeParts.join('-');
 
   const difficulty = DIFFICULTY_ALIASES[diff];
   if (!difficulty) return null;
 
-  // Accept any type/subtype — store as metadata
-  return { difficulty, type: 'multiple-choice' as QuestionType, id, subtype: `${type}-${subtype}` };
+  return { difficulty, type: 'multiple-choice' as QuestionType, id, subtype: `${type}${subtype ? '-' + subtype : ''}` };
 }
 
 function readFileAsDataUrl(file: File): Promise<string> {
