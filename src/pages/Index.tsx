@@ -1,5 +1,5 @@
-import { useState, useEffect, useMemo } from 'react';
-import { getQuestions, deleteQuestion, deleteAllQuestions } from '@/lib/store';
+import { useState, useMemo } from 'react';
+import { loadStaticQuestions } from '@/lib/questionLoader';
 import { Question, QUESTION_TYPE_LABELS, DIFFICULTY_LABELS, Difficulty } from '@/lib/types';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
