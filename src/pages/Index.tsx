@@ -6,10 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Trash2, ArrowUpDown, Eye } from 'lucide-react';
-import { toast } from 'sonner';
+import { ArrowUpDown, Eye } from 'lucide-react';
 import Layout from '@/components/Layout';
-import { useAuth } from '@/hooks/useAuth';
 
 function DifficultyBadge({ difficulty }: { difficulty: Question['difficulty'] }) {
   const colors = {
