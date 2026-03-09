@@ -1,15 +1,13 @@
-import { useState, useEffect, useMemo } from 'react';
-import { getQuestions, deleteQuestion, deleteAllQuestions } from '@/lib/store';
+import { useState, useMemo } from 'react';
+import { loadStaticQuestions } from '@/lib/questionLoader';
 import { Question, QUESTION_TYPE_LABELS, DIFFICULTY_LABELS, Difficulty } from '@/lib/types';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Trash2, ArrowUpDown, Eye } from 'lucide-react';
-import { toast } from 'sonner';
+import { ArrowUpDown, Eye } from 'lucide-react';
 import Layout from '@/components/Layout';
-import { useAuth } from '@/hooks/useAuth';
 
 function DifficultyBadge({ difficulty }: { difficulty: Question['difficulty'] }) {
   const colors = {
@@ -30,17 +28,12 @@ type SortDir = 'asc' | 'desc';
 const DIFFICULTY_ORDER: Record<Difficulty, number> = { easy: 0, medium: 1, hard: 2 };
 
 export default function Index() {
-  const { isAdmin } = useAuth();
-  const [questions, setQuestions] = useState<Question[]>([]);
+  const [questions] = useState<Question[]>(() => loadStaticQuestions());
   const [filterDifficulty, setFilterDifficulty] = useState<string>('all');
   const [filterType, setFilterType] = useState<string>('all');
   const [filterSubtype, setFilterSubtype] = useState<string>('all');
   const [sortField, setSortField] = useState<SortField>('date');
   const [sortDir, setSortDir] = useState<SortDir>('desc');
-
-  useEffect(() => {
-    getQuestions().then(setQuestions);
-  }, []);
 
   const subtypes = useMemo(() => {
     const set = new Set<string>();
@@ -73,20 +66,6 @@ export default function Index() {
     return result;
   }, [questions, filterDifficulty, filterType, filterSubtype, sortField, sortDir]);
 
-  const handleDelete = async (id: string) => {
-    await deleteQuestion(id);
-    const updated = await getQuestions();
-    setQuestions(updated);
-    toast.success('Question deleted');
-  };
-
-  const handleDeleteAll = async () => {
-    if (!window.confirm(`Delete all ${questions.length} questions? This cannot be undone.`)) return;
-    await deleteAllQuestions();
-    setQuestions([]);
-    toast.success('All questions deleted');
-  };
-
   const [previewQuestion, setPreviewQuestion] = useState<Question | null>(null);
 
   const toggleSortDir = () => setSortDir(d => d === 'asc' ? 'desc' : 'asc');
@@ -102,11 +81,6 @@ export default function Index() {
 
       {questions.length > 0 && (
         <div className="mb-6 flex flex-wrap items-center gap-3">
-          {isAdmin && (
-            <Button variant="destructive" size="sm" className="gap-2" onClick={handleDeleteAll}>
-              <Trash2 className="h-4 w-4" /> Delete All
-            </Button>
-          )}
           <Select value={filterDifficulty} onValueChange={setFilterDifficulty}>
             <SelectTrigger className="w-[140px]"><SelectValue placeholder="Difficulty" /></SelectTrigger>
             <SelectContent>
@@ -183,11 +157,6 @@ export default function Index() {
                 {q.hasImage && (
                   <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-primary" onClick={() => setPreviewQuestion(q)}>
                     <Eye className="h-4 w-4" />
-                  </Button>
-                )}
-                {isAdmin && (
-                  <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-destructive" onClick={() => handleDelete(q.id)}>
-                    <Trash2 className="h-4 w-4" />
                   </Button>
                 )}
               </div>
