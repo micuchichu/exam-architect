@@ -169,7 +169,7 @@ export default function Exams() {
 
   useEffect(() => {
     getExams().then(setExams);
-    getQuestions().then(setQuestions);
+    setQuestions(loadStaticQuestions());
   }, []);
 
   const handleGenerate = async () => {
