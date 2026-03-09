@@ -69,20 +69,6 @@ export default function Index() {
     return result;
   }, [questions, filterDifficulty, filterType, filterSubtype, sortField, sortDir]);
 
-  const handleDelete = async (id: string) => {
-    await deleteQuestion(id);
-    const updated = await getQuestions();
-    setQuestions(updated);
-    toast.success('Question deleted');
-  };
-
-  const handleDeleteAll = async () => {
-    if (!window.confirm(`Delete all ${questions.length} questions? This cannot be undone.`)) return;
-    await deleteAllQuestions();
-    setQuestions([]);
-    toast.success('All questions deleted');
-  };
-
   const [previewQuestion, setPreviewQuestion] = useState<Question | null>(null);
 
   const toggleSortDir = () => setSortDir(d => d === 'asc' ? 'desc' : 'asc');
