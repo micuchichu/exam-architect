@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
-import { getQuestions, getExams, saveExam, deleteExam } from '@/lib/store';
+import { getExams, saveExam, deleteExam } from '@/lib/store';
+import { loadStaticQuestions } from '@/lib/questionLoader';
 import { generateExam } from '@/lib/generator';
 import { getImages } from '@/lib/idb';
 import { cropImageToContent } from '@/lib/cropImage';
