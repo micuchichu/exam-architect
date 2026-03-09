@@ -31,16 +31,12 @@ const DIFFICULTY_ORDER: Record<Difficulty, number> = { easy: 0, medium: 1, hard:
 
 export default function Index() {
   const { isAdmin } = useAuth();
-  const [questions, setQuestions] = useState<Question[]>([]);
+  const [questions] = useState<Question[]>(() => loadStaticQuestions());
   const [filterDifficulty, setFilterDifficulty] = useState<string>('all');
   const [filterType, setFilterType] = useState<string>('all');
   const [filterSubtype, setFilterSubtype] = useState<string>('all');
   const [sortField, setSortField] = useState<SortField>('date');
   const [sortDir, setSortDir] = useState<SortDir>('desc');
-
-  useEffect(() => {
-    getQuestions().then(setQuestions);
-  }, []);
 
   const subtypes = useMemo(() => {
     const set = new Set<string>();
