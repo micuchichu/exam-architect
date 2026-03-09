@@ -28,7 +28,6 @@ type SortDir = 'asc' | 'desc';
 const DIFFICULTY_ORDER: Record<Difficulty, number> = { easy: 0, medium: 1, hard: 2 };
 
 export default function Index() {
-  const { isAdmin } = useAuth();
   const [questions] = useState<Question[]>(() => loadStaticQuestions());
   const [filterDifficulty, setFilterDifficulty] = useState<string>('all');
   const [filterType, setFilterType] = useState<string>('all');
