@@ -26,7 +26,7 @@ const DIFFICULTY_ALIASES: Record<string, Difficulty> = {
 };
 
 function parseFilename(name: string): { difficulty: Difficulty; type: string; subtype: string; id: string } | null {
-  const base = name.replace(/\.\w+$/, '').toLowerCase();
+  const base = name.replace(/\.\w+$/, '');
   const parts = base.split(/\-/);
   if (parts.length < 4) return null;
   const [id, diff, type, ...subtypeParts] = parts;
@@ -188,3 +188,4 @@ export default function UploadQuestions() {
     </Layout>
   );
 }
+

@@ -25,7 +25,7 @@ export function generateExam(
     if (cfg.excludedTypes.includes(q.type)) return false;
     if (q.subtype && cfg.excludedSubtypes.includes(q.subtype)) return false;
     return true;
-  });
+  }); 
 
   if (filtered.length < 10) {
     return { error: `Not enough eligible questions. Have ${filtered.length}, need at least 10.` };

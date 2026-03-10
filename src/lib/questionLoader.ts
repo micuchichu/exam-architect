@@ -13,7 +13,7 @@ const imageModules = import.meta.glob<{ default: string }>(
 
 function parseFilename(path: string): { difficulty: Difficulty; type: string; subtype: string; id: string } | null {
   const filename = path.split('/').pop() || '';
-  const base = filename.replace(/\.\w+$/, '').toLowerCase();
+  const base = filename.replace(/\.\w+$/, '');
   const parts = base.split('-');
   if (parts.length < 4) return null;
   const [id, diff, type, ...subtypeParts] = parts;

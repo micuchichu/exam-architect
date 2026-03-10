@@ -11,21 +11,11 @@ const publicNavItems = [
   { to: '/exams', label: 'Exams', icon: FileText },
 ];
 
-const adminNavItems = [
-  { to: '/add', label: 'Add Question', icon: PlusCircle },
-  { to: '/upload', label: 'Upload Folder', icon: FolderUp },
-];
-
 export default function Layout({ children }: { children: React.ReactNode }) {
   const { pathname } = useLocation();
   const { isAdmin, user, signOut } = useAuth();
 
-  const navItems = isAdmin ? [...publicNavItems, ...adminNavItems] : publicNavItems;
-
-  const handleSignOut = async () => {
-    await signOut();
-    toast.success('Signed out');
-  };
+  const navItems = publicNavItems;
 
   return (
     <div className="min-h-screen bg-background">
