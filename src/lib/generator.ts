@@ -25,7 +25,15 @@ export function generateExam(
     if (cfg.excludedTypes.includes(q.type)) return false;
     if (q.subtype && cfg.excludedSubtypes.includes(q.subtype)) return false;
     return true;
-  }); 
+  });
+    console.log(`Filtered: ${filtered.length} questions`);
+
+    const subtypeBreakdown = filtered.reduce((acc, q) => {
+    const st = getSubtype(q);  // Use your getSubtype
+    acc[st] = (acc[st] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>);
+  console.log('Subtype counts:', subtypeBreakdown);
 
   if (filtered.length < 10) {
     return { error: `Not enough eligible questions. Have ${filtered.length}, need at least 10.` };
@@ -113,12 +121,15 @@ export function generateExam(
     }
   }
 
+    console.log(`Selected ${selected.length}/10`);
+  console.log('Final subtype counts:', subtypeCounts);
+
   if (selected.length < 10) {
     return { error: `Could only select ${selected.length} questions with subtype constraints (max 2 per subtype). Add more questions of different subtypes.` };
   }
 
   return {
-    id: crypto.randomUUID(),
+    id: `exam-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`,
     questions: shuffle(selected),
     createdAt: new Date().toISOString(),
   };
