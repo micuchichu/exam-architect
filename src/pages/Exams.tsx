@@ -13,6 +13,8 @@ import { Sparkles, Trash2, ChevronDown, ChevronUp, Download } from 'lucide-react
 import { toast } from 'sonner';
 import Layout from '@/components/Layout';
 import ExamSettingsPanel from '@/components/ExamSettingsPanel';
+import { useExamTemplates } from '@/hooks/useExamTemplates';
+import { generateExamWithTemplate } from '@/lib/generator';
 
 function DifficultyDot({ difficulty }: { difficulty: string }) {
   const colors: Record<string, string> = {
@@ -157,6 +159,8 @@ function ExamImageViewer({ exam }: { exam: GeneratedExam }) {
 }
 
 export default function Exams() {
+  const { templates } = useExamTemplates();
+
   const [exams, setExams] = useState<GeneratedExam[]>([]);
   const [expanded, setExpanded] = useState<string | null>(null);
   const [questions, setQuestions] = useState<Question[]>([]);
@@ -173,7 +177,11 @@ export default function Exams() {
   }, []);
 
   const handleGenerate = async () => {
-    const result = generateExam(questions, settings);
+     const result = generateExamWithTemplate(questions, templates, {
+  	difficultyLevel: 2,  // 1=Ușor → 5=Foarte Greu
+  	excludedCategories: ['geometrie'],
+    });
+    //const result = generateExam(questions, settings);
     if ('error' in result) {
       toast.error(result.error);
       return;
@@ -214,27 +222,33 @@ export default function Exams() {
         </Card>
       ) : (
         <div className="grid gap-4">
-          {exams.map((exam, idx) => (
-            <Card key={exam.id} className="overflow-hidden">
-              <button
-                className="flex w-full items-center justify-between p-4 text-left hover:bg-secondary/50 transition-colors"
-                onClick={() => setExpanded(expanded === exam.id ? null : exam.id)}
-              >
-                <div>
-                  <p className="font-semibold">Exam #{exams.length - idx}</p>
-                  <p className="text-xs text-muted-foreground">{new Date(exam.createdAt).toLocaleDateString()}</p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-destructive" onClick={e => { e.stopPropagation(); handleDelete(exam.id); }}>
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                  {expanded === exam.id ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-                </div>
-              </button>
-              {expanded === exam.id && <ExamImageViewer exam={exam} />}
-            </Card>
-          ))}
+           {exams.map((exam, idx) => (
+  <Card key={exam.id} className="overflow-hidden">
+    <button
+      className="flex w-full items-center justify-between p-4 text-left hover:bg-secondary/50 transition-colors"
+      onClick={() => setExpanded(expanded === exam.id ? null : exam.id)}
+    >
+      <div>
+        <p className="font-semibold">Exam #{exams.length - idx}</p>
+        <p className="text-xs text-muted-foreground">{new Date(exam.createdAt).toLocaleDateString()}</p>
+      </div>
+      <div className="flex items-center gap-2">
+        {/* ✅ Button înlocuit cu div + svg clickable */}
+        <div
+          role="button"
+          tabIndex={0}
+          className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 p-1 rounded-sm transition-colors focus:outline-none focus:ring-2 focus:ring-destructive focus:ring-offset-2"
+          onClick={e => { e.stopPropagation(); handleDelete(exam.id); }}
+          onKeyDown={e => e.key === 'Enter' && handleDelete(exam.id)}
+        >
+          <Trash2 className="h-4 w-4" />
         </div>
+        {expanded === exam.id ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+      </div>
+    </button>
+    {expanded === exam.id && <ExamImageViewer exam={exam} />}
+  </Card>
+))}       </div>
       )}
     </Layout>
   );
